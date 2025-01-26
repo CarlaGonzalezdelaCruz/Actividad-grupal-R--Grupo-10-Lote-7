@@ -1,0 +1,68 @@
+•	Utiliza la librería correspondiente para realizar el PCA de los datos de expresión génica (como consejo, coger al menos aquellos componentes que explique un 70% de la varianza de los datos). 
+Para ello, tendrás que dejar bien claro cada uno de los pasos que se vieron en el temario y en la clase, creando tablas o figuras de cada uno de ellos
+(si se opta por tablas, reflejarlas en una tabla modelo adjuntada al final de documento en la sección «Extensión y formato»). 
+Puedes apoyarte en el siguiente enlace para mejorar tus análisis: https://rpubs.com/Cristina_Gil/PCA.
+SCRIPT:
+
+library(readr)
+#Cargar la base de datos
+Dataset_expresión_genes <- read_csv("Master en Bioinformática/Primer cuatrimestre/Estadística y R para Ciencias de la Salud/Actividad 3/Dataset expresión genes.csv")
+View(Dataset_expresión_genes)
+
+#Realizar un PCA con los datos de expresión génica
+#crear un dt solamente con los datos de expresion genica y ver como se distribuyen esos datoss.
+library(car)
+library(ggplot2)
+library(gridExtra)
+library(dplyr)
+
+datos_expresiongenica <- Dataset_expresión_genes %>% select(starts_with("AQ_"))
+#Para ver la normalidad de las variantes hag shapiro
+resultados_saphiro <- apply(datos_expresiongenica, 2, function(x) shapiro.test(x)$p.value)
+resultados_saphiro
+#creo una tabla con los datos de normalidad
+tabla_resultados <- data.frame(
+  Variantes = colnames(datos_expresiongenica),
+  p_valor = format(resultados_saphiro, digits = 3, scientific = TRUE), 
+  Test = rep("Shapiro-Wilk", length(resultados_saphiro)), 
+  Interpretacion = ifelse(resultados_saphiro < 0.05, "No normal", "Normal")
+)
+tabla_resultados
+############################################################CREACION DEL PCA E INTERPRETACION SEGUN DIFERENTES PARAMETROS#########################
+library(factoextra)
+#todas las variantes siguen una distribucion no paramétrica.
+#Un PCA reduce la cantidad de información, pero nos mantiene la mayor cantidad de varianza, es decir, la información que nos proporciona la base de datos. 
+pca <- prcomp(datos_expresiongenica, scale. = TRUE) #escalamos los datos para igualar la varianza
+eigenvalues <- get_eigenvalue(pca)
+eigenvalues #La dimension que me explica mas del 70% de la varianza de mis variables es cogiendo 5 dimensiones. 
+#para ver qué datos explican entorno al 70% de la varianza, hacemos un grafico que se llama scree plot. #Para ver mi R2 que es la proporcion de la varianza explicada de cada pomponente: 
+fviz_eig(pca, addlabels = TRUE, ylim = c(0, 60))
+#para extraer los datos de las variables
+varianzas <- get_pca_var(pca)
+varianzas
+
+
+#coor son las coordenadas de variables para crear un gráfico de dispersion
+#cos2 representa la calidad, a mayor cos2, mayor calidad de la variable y por lo tanto, mas importante
+#contrib contiene las contribuciones en % de las variables a los componentes principales 
+
+#Vamos a visualizar en un gráfico de correlacion las relaciones entre todos los niveles de expresión génica
+fviz_pca_var(pca, col.var = "black")
+#Para añadir cos2 a las reslaciones entre variables
+fviz_pca_var(pca, col.var = "cos2", 
+             gradient.cols =c("yellow", "skyblue", "red"), 
+             repel = TRUE)
+#si quiero ver la contribucion en % de las variables a cada componente
+fviz_pca_var(pca, col.var = "contrib", 
+             gradient.cols =c("yellow", "skyblue", "red"), 
+             repel = TRUE)
+
+#SI QUIERO HACER ESTOS GRÁFICOS PERO CON MAS DE LA DIMENSION 1 Y 2:
+############
+
+#Las variables con menor valor de cos son AQ_ADIPOQ y AQ_NOX. Mientras que las variables con mayor valor de cos son AQ_KJAK, AQ_SREBF, AQ_FASN, AQ_PTAFR. 
+#Vamos a visualizar la importancia de cada variable por dimensiones con los siguientes gráficos: 
+#si ponemos axes = 1 es la dim 1  y si ponemos axes = 2 es la dimension 2.
+fviz_contrib(pca, choice = "var", axes = 1, top = 50) #dimension 1
+fviz_contrib(pca, choice = "var", axes = 2, top = 50) #dimension 2
+fviz_contrib(pca, choice = "var", axes = 1:2, top = 50) #dimension 1 y 2
