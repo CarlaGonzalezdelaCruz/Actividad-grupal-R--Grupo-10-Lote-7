@@ -1,0 +1,8 @@
+•	Utiliza la función vista en clase para construir el modelo de regresión logística, donde la variable resultado es metástasis (sí/no) y 
+las variables predictoras son los terciles de los componentes principales obtenidos del PCA y otras variables de ajuste relevantes (pueden ser sociodemográficas o clínicas). 
+Crea una tabla o gráfico con los datos de la regresión logística utilizando varios modelos de ajuste que sean lógicos y razonables. 
+Importante, ten en cuenta los requisitos que había que hacer para la identificación de variables confusoras. 
+El formato de la tabla puedes guiarte tal y como se puede ver en la Tabla de regresión logística de los anexos.
+•	Utiliza las funciones específicas vistas en el temario para evaluar la calidad del modelo, 
+además de las funciones específicas para sacar los parámetros (coeficientes exponenciados, IC 95 %, valores p) de cada variable introducida en el modelo. 
+•	Basándote en los resultados obtenidos, elabora un informe de 1 página como máximo sobre: que conclusiones sacas del análisis del caso práctico en el HTML después de los análisis.
