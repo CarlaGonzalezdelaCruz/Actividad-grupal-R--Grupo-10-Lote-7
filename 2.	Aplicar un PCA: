@@ -66,6 +66,6 @@ fviz_pca_var(pca, col.var = "contrib",
 #si ponemos axes = 1 es la dim 1  y si ponemos axes = 2 es la dimension 2.
 fviz_contrib(pca, choice = "var", axes = 1, top = 50) #dimension 1
 fviz_contrib(pca, choice = "var", axes = 2, top = 50) #dimension 2
-
-
 fviz_contrib(pca, choice = "var", axes = 1:2, top = 50) #dimension 1 y 2
+
+--------------------------------------------------------------------------------------------------
