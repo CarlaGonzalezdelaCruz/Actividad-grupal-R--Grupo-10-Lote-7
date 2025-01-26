@@ -1,0 +1,8 @@
+•	Crea una tabla que incluya las estadísticas descriptivas de los valores sin transformar (media + desviación estándar si son paramétricas, 
+mediana + rango intercuartílico (p25-p75) si no lo son) por terciles de cada componente del PCA (ver modelo de Tabla descriptiva adjuntada al final de documento en la sección «Extensión y formato»). 
+Para calcular los terciles de un conjunto de datos, primero se determinan los puntos de corte que dividen el conjunto en tres partes iguales. Utilizando la función quantile, 
+se calculan los valores en los que el 33.33% y el 66.67% de los datos se encuentran por debajo, lo que nos da los primeros y segundos terciles, respectivamente.
+Luego, para asignar a cada dato una categoría de tercil, se utiliza la función cut. Esto clasifica los datos en tres grupos según estos puntos de corte, etiquetándolos como «t1», «t2» o «t3» para los primeros, segundos y terceros terciles. 
+Así, cada dato en la columna PC1 se categoriza en uno de los tres terciles basándose en su valor relativo.
+
+
