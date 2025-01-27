@@ -3,4 +3,51 @@ incluido gráficos que aporten información relevante a los resultados.
 Además, asegúrate de etiquetar adecuadamente los ejes y títulos de los gráficos para facilitar la interpretación. 
 Puedes apoyarte en el siguiente enlace para mejorar tus análisis: https://rpubs.com/Cristina_Gil/PCA.
 
+--------------- Valeria ----------------------
 
+var <- get_pca_var(pca)
+var
+
+fviz_pca_var(pca, col.var = "black")
+
+fviz_pca_var(
+  pca, 
+  col.var = "cos2", 
+  gradient.cols = c("blue", "yellow", "red"), 
+  repel = TRUE # Evitar el solapamiento de etiquetas
+)
+
+fviz_cos2(pca, choice = "var", axes = 1:2)
+
+fviz_contrib(pca, choice = "var", axes = 1, top = 10)
+
+fviz_contrib(pca, choice = "var", axes = 2, top = 10)
+
+fviz_contrib(pca, choice = "var", axes = 3, top = 10)
+
+fviz_contrib(pca, choice = "var", axes = 4, top = 10)
+
+fviz_contrib(pca, choice = "var", axes = 5, top = 10)
+
+fviz_pca_ind(pca, col.var = "cos2",
+  gradient.cols = c("blue", "yellow", "red"),
+  repel = TRUE)
+
+fviz_pca_ind(pca, pointsize = "cos2",
+             repel = TRUE)
+
+# Realizar k-means sobre las variables 
+kmeans_var <- kmeans(t(pca$rotation), centers = 3)  # Transponer para que las variables sean filas
+
+# Crear un vector que indique el cluster al que pertenece cada variable
+grupo_var <- as.factor(kmeans_var$cluster)
+
+# Visualizar las variables del PCA agrupadas por sus clusters
+fviz_pca_var(
+  pca,
+  col.var = grupo_var,                    # Colorear variables por clusters
+  palette = c("grey", "yellow", "blue"),  # Paleta de colores
+  legend.title = "Cluster",               # Título de la leyenda
+  repel = TRUE                            # Evitar superposición de etiquetas
+)
+------------------------
