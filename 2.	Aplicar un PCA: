@@ -52,8 +52,8 @@ varianzas <- get_pca_var(pca)
 varianzas
 
 
------ Valeria ----
-# Crear una tabla con los componentes principales y R2 (tabla 1 en Extensión y formato)
+----- Valeria -----
+### Crear una tabla con los componentes principales y R2 (tabla 1 en Extensión y formato)
 tabla_pca_r2 <- data.frame(
   Componente = paste0("Dim.", 1:5),  # Selecciona las primeras 5 dimensiones
   R2 = sprintf("%.3f", eigenvalues$variance.percent[1:5])  # Extrae y formatea el porcentaje de varianza explicada
@@ -61,14 +61,22 @@ tabla_pca_r2 <- data.frame(
 
 tabla_pca_r2
 
+### Tabla PCA cargas (tabla 2 en Extensión y formato)
+# Obtener las cargas de las variables en los componentes principales
+cargas <- pca$rotation  # Las cargas están en la matriz 'rotation'
 
+cargas_seleccionadas <- as.data.frame(cargas[, 1:5]) # Seleccionar solo los primeros n componentes (en este caso, 5 componentes)
 
-------------------
+cargas_seleccionadas <- tibble::rownames_to_column(cargas_seleccionadas, var = "Variable") # Añadir los nombres de las variables como una columna
 
+colnames(cargas_seleccionadas) <- c("Variable", "Componente 1", "Componente 2", "Componente 3", "Componente 4", "Componente 5") # Renombrar las columnas 
 
+cargas_seleccionadas <- cargas_seleccionadas %>%
+  mutate(across(-Variable, ~ sprintf("%.3f", .))) # Formatear las cargas con 3 decimales
 
+cargas_seleccionadas
 
-
+-------------------
 
 
 
