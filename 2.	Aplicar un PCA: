@@ -17,7 +17,16 @@ library(ggplot2)
 library(gridExtra)
 library(dplyr)
 
+
+---- Agregado por Valeria ----
+
+#Confirmar que no hay valores NA en el dataset
+any(is.na(Dataset_expresión_genes))
+
+----    
+
 datos_expresiongenica <- Dataset_expresión_genes %>% select(starts_with("AQ_"))
+
 #Para ver la normalidad de las variantes hag shapiro
 resultados_saphiro <- apply(datos_expresiongenica, 2, function(x) shapiro.test(x)$p.value)
 resultados_saphiro
