@@ -52,6 +52,27 @@ varianzas <- get_pca_var(pca)
 varianzas
 
 
+----- Valeria ----
+# Crear una tabla con los componentes principales y R2 (tabla 1 en Extensión y formato)
+tabla_pca_r2 <- data.frame(
+  Componente = paste0("Dim.", 1:5),  # Selecciona las primeras 5 dimensiones
+  R2 = sprintf("%.3f", eigenvalues$variance.percent[1:5])  # Extrae y formatea el porcentaje de varianza explicada
+)
+
+tabla_pca_r2
+
+
+
+------------------
+
+
+
+
+
+
+
+
+#Graficos
 #coor son las coordenadas de variables para crear un gráfico de dispersion
 #cos2 representa la calidad, a mayor cos2, mayor calidad de la variable y por lo tanto, mas importante
 #contrib contiene las contribuciones en % de las variables a los componentes principales 
