@@ -76,6 +76,22 @@ cargas_seleccionadas <- cargas_seleccionadas %>%
 
 cargas_seleccionadas
 
+### Correlación entre dimensiones y funciones biológicas:
+Componente 1:Inflamación Sistémica y Estrés Celular
+Este componente está fuertemente asociado con genes involucrados en la inflamación crónica, como TNF, IL1B, IFNG, y NOX5, junto con genes relacionados con la respuesta al estrés celular (como FOXO3 y MAPK1).
+
+Componente 2: Regulación Inmunológica y Señalización Celular
+Este componente agrupa genes relacionados con la respuesta inmunológica y la señalización celular, como IL10, CXCR1, JAK3, y TLR4, involucrados en la activación de células inmunitarias y en la regulación de procesos celulares como la proliferación y la diferenciación.
+
+Componente 3: Inflamación Inmunitaria y Metabolismo Celular
+Este componente incluye genes implicados en la inflamación (como NOS2, IL1B, TNF, y NLRP3) y en el metabolismo celular, con énfasis en la regulación de la glucosa (como SLC2A4) y la respuesta metabólica a factores de estrés, además de la regulación de citoquinas proinflamatorias.
+
+Componente 4: Metabolismo Lipídico y Respuesta Inmunitaria
+Este componente está fuertemente relacionado con la regulación de genes implicados en el metabolismo lipídico (como PPARG, FASN, SREBF1) y la respuesta inmunitaria (como IL1B, NOS2, TNF). También involucra procesos de diferenciación celular y regulación de la homeostasis energética.
+
+Componente 5: Inflamación Inmunometabólica
+Este componente tiene una clara correlación con genes proinflamatorios como IL6, TNF, CCL2, y CSF2, junto con genes asociados con el metabolismo lipídico y la regulación de la glucosa (como ADIPOQ y SLC2A4). Reúne genes clave en la regulación de la inflamación y el metabolismo.
+
 -------------------
 
 
