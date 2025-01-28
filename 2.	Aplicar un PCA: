@@ -6,26 +6,26 @@ SCRIPT:
 
 -----------------------------------------------------------------------------REALIZADO POR CARLA-------------------------------------------------------------------------------------------------
 library(readr)
+library(dplyr)
+library(ggplot2)
+library(car)
+library(gridExtra)
+library(factoextra)
+
 #Cargar la base de datos
 Dataset_expresión_genes <- read_csv("Master en Bioinformática/Primer cuatrimestre/Estadística y R para Ciencias de la Salud/Actividad 3/Dataset expresión genes.csv")
 View(Dataset_expresión_genes)
 
 #Realizar un PCA con los datos de expresión génica
 #crear un dt solamente con los datos de expresion genica y ver como se distribuyen esos datoss.
-library(car)
-library(ggplot2)
-library(gridExtra)
-library(dplyr)
-
+datos_expresiongenica <- Dataset_expresión_genes %>% select(starts_with("AQ_"))
 
 ---- Agregado por Valeria ----
 
 #Confirmar que no hay valores NA en el dataset
 any(is.na(Dataset_expresión_genes))
 
-----    
-
-datos_expresiongenica <- Dataset_expresión_genes %>% select(starts_with("AQ_"))
+---- 
 
 #Para ver la normalidad de las variantes hag shapiro
 resultados_saphiro <- apply(datos_expresiongenica, 2, function(x) shapiro.test(x)$p.value)
