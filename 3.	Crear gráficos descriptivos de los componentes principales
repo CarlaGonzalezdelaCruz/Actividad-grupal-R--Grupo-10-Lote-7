@@ -50,6 +50,17 @@ fviz_pca_var(
   legend.title = "Cluster",               # Título de la leyenda
   repel = TRUE                            # Evitar superposición de etiquetas
 )
+
+------------------------------------------------------------------------ JUDIT ----------------------------------------------------------------------
+# Separar las variables por 4 clústers representados con ELIPSES (creo que queda mejor prepresentado, también hay una variable que está muy alejada y queda como el 4º cluster)
+kmeans <- kmeans(df_expresion, centers = 4)
+grupo <- as.factor(kmeans$cluster)
+
+fviz_pca_ind(pca,col.ind = grupo,     
+             palette = c("lightgreen", "lightcoral", "skyblue", "orange"),
+             addEllipses = TRUE,
+             legend.title = "Cluster")
+
 -------------------------------------------------------------------------------------------- CARLA-------------------------------------------------------------------------------
 #Vamos a visualizar la importancia de cada variable por dimensiones con los siguientes gráficos: 
 #si ponemos axes = 1 es la dim 1  y si ponemos axes = 2 es la dimension 2.
