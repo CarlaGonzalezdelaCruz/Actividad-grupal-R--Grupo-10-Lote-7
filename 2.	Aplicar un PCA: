@@ -128,4 +128,7 @@ fviz_contrib(pca, choice = "var", axes = 1, top = 50) #dimension 1
 fviz_contrib(pca, choice = "var", axes = 2, top = 50) #dimension 2
 fviz_contrib(pca, choice = "var", axes = 1:2, top = 50) #dimension 1 y 2
 
+-------ANA AMADOR--------
+# Considero que seria interesante ver tanto las interacciones de dimensiones 1:2, 2:3... como indivudalmente ya que hay genes que estan más potenciados en determinadas dimensiones. Me encargo de ello
+
 --------------------------------------------------------------------------------------------------
