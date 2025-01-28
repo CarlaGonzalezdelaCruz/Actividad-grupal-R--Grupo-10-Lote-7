@@ -11,6 +11,7 @@ library(ggplot2)
 library(car)
 library(gridExtra)
 library(factoextra)
+library(FactoMineR)
 
 #Cargar la base de datos
 Dataset_expresión_genes <- read_csv("Master en Bioinformática/Primer cuatrimestre/Estadística y R para Ciencias de la Salud/Actividad 3/Dataset expresión genes.csv")
@@ -45,12 +46,19 @@ library(factoextra)
 pca <- prcomp(datos_expresiongenica, scale. = TRUE) #escalamos los datos para igualar la varianza
 eigenvalues <- get_eigenvalue(pca)
 eigenvalues #La dimension que me explica mas del 70% de la varianza de mis variables es cogiendo 5 dimensiones. 
+
 #para ver qué datos explican entorno al 70% de la varianza, hacemos un grafico que se llama scree plot. #Para ver mi R2 que es la proporcion de la varianza explicada de cada pomponente: 
 fviz_eig(pca, addlabels = TRUE, ylim = c(0, 60))
+
 #para extraer los datos de las variables
 varianzas <- get_pca_var(pca)
 varianzas
 
+-------------- JUDIT ------------------
+# Tabla de la varianza de cada componente principal y la varianza acumulativa
+pca2.nci <- PCA(X = datos_expresiongenica, scale.unit = TRUE, ncp = 64, graph = FALSE)
+tabla_var <- round(head(pca2.nci$eig,5),3)
+tabla_var
 
 ----- Valeria -----
 ### Crear una tabla con los componentes principales y R2 (tabla 1 en Extensión y formato)
@@ -92,10 +100,8 @@ Este componente está fuertemente relacionado con la regulación de genes implic
 Componente 5: Inflamación Inmunometabólica
 Este componente tiene una clara correlación con genes proinflamatorios como IL6, TNF, CCL2, y CSF2, junto con genes asociados con el metabolismo lipídico y la regulación de la glucosa (como ADIPOQ y SLC2A4). Reúne genes clave en la regulación de la inflamación y el metabolismo.
 
--------------------
 
-
-
+------------------- CARLA -------------------------------
 #Graficos
 #coor son las coordenadas de variables para crear un gráfico de dispersion
 #cos2 representa la calidad, a mayor cos2, mayor calidad de la variable y por lo tanto, mas importante
