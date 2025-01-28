@@ -51,7 +51,7 @@ fviz_pca_var(
   repel = TRUE                            # Evitar superposición de etiquetas
 )
 
------------------------------------------------------------------------- JUDIT ----------------------------------------------------------------------
+-------------------------------------- JUDIT ---------------------------------------
 # Separar las variables por 4 clústers representados con ELIPSES (creo que queda mejor prepresentado, también hay una variable que está muy alejada y queda como el 4º cluster)
 kmeans <- kmeans(df_expresion, centers = 4)
 grupo <- as.factor(kmeans$cluster)
