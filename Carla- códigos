@@ -1,0 +1,118 @@
+Código para tabla descriptiva de PCA y terciles
+
+###########################################################CREACION DE TABLA DESCRIPTIVA POR CADA TERCIL DE CADA COMPONENTE###################3
+# Asumiendo que ya tienes los datos de PCA (pca_result) y los datos de expresión genética (datos_expresiongenica)
+# Crear los terciles de PCA para el componente PC1 (puedes hacerlo de manera similar para otros componentes)
+#PARA HACER LA TABLA SE COGEN LAS PRIMERAS 5 COMPONENTES PRINCIPALES. LA PRIMERA ACUMULA MAS VARIANZA EXPLICADA. 
+library(gtsummary)
+
+pca_selec <- pca$rotation[, 1:5] #seleccion de componentes principales
+pca_selec
+pca_seleccionada <- as.data.frame(pca_selec)
+#sacar los terciles para cada componente principal, siendo un total de 5. 
+terciles_pc1 <- (quantile(pca_seleccionada$PC1, probs = c(0, 1/3, 2/3, 1))) 
+terciles_pc2 <- (quantile(pca_seleccionada$PC2, probs = c(0, 1/3, 2/3, 1)))
+terciles_pc3 <- (quantile(pca_seleccionada$PC3, probs = c(0, 1/3, 2/3, 1)))
+terciles_pc4 <- (quantile(pca_seleccionada$PC4, probs = c(0, 1/3, 2/3, 1)))
+terciles_pc5 <- (quantile(pca_seleccionada$PC5, probs = c(0, 1/3, 2/3, 1)))
+
+# Creo una nueva tabla que dice para cada paciente y componente, a cual tercil corresponde el valor del score
+pca_terciles <- data.frame(
+  Tercil_PC1 = cut(pca_seleccionada$PC1, breaks = terciles_pc1, labels = c("T1", "T2", "T3"), include.lowest = TRUE),
+  Tercil_PC2 = cut(pca_seleccionada$PC2, breaks = terciles_pc2, labels = c("T1", "T2", "T3"), include.lowest = TRUE),
+  Tercil_PC3 = cut(pca_seleccionada$PC3, breaks = terciles_pc3, labels = c("T1", "T2", "T3"), include.lowest = TRUE),
+  Tercil_PC4 = cut(pca_seleccionada$PC4, breaks = terciles_pc4, labels = c("T1", "T2", "T3"), include.lowest = TRUE),
+  Tercil_PC5 = cut(pca_seleccionada$PC5, breaks = terciles_pc5, labels = c("T1", "T2", "T3"), include.lowest = TRUE)
+)
+#juntar las tablas de pca y las de tercil. cuando haga la tabla final con gtsummary, excluyo las columnas de PCn, pero sigo manteniendo asi la de las variables. 
+pca_datos <- bind_cols(pca_seleccionada,pca_terciles)
+
+# seleccionamos las columnas de genes (asumiendo que tus genes están en pca_seleccionada y que pca_terciles ya tiene los terciles correspondientes).
+# Asegúrate de que pca_seleccionada contiene los genes de interés. Por ejemplo, si tus genes están en pca_seleccionada, simplemente agrégalo.
+genes <- pca_datos  # Asumiendo que pca_seleccionada tiene los datos de genes
+genes <- as.data.frame(genes)
+
+#TABLA COMPONENTE 1
+# Añadir la columna de terciles
+genes$Tercil_PC1 <- pca_datos$Tercil_PC1
+
+# Crear la tabla descriptiva utilizando `tbl_summary`
+tabla_t1 <- genes %>%
+  tbl_summary(
+    by = Tercil_PC1,
+    statistic = list(all_continuous() ~ "{median} ({p25} - {p75})", all_categorical() ~ "{n} ({p}%)"), # se utiliza la mediana y el Rango itnercuartilico porque no son normales
+    missing = "no"  # Ignorar valores NA
+  ) %>%
+  add_p() %>%  # Agregar pruebas estadísticas entre grupos
+  modify_header(label ~ "**Variable**") %>%
+  modify_caption("**Componente 1**")
+
+tabla_t1
+
+#Tabla para componente 2
+genes$Tercil_PC2 <- pca_terciles$Tercil_PC2
+
+tabla_t2 <- genes %>%
+  tbl_summary(
+    by = Tercil_PC2,
+    statistic = list(all_continuous() ~ "{median} ({p25} - {p75})", all_categorical() ~ "{n} ({p}%)"), # se utiliza la mediana y el Rango itnercuartilico porque no son normales
+    missing = "no"  # Ignorar valores NA
+  ) %>%
+  add_p() %>%  # Agregar pruebas estadísticas entre grupos
+  modify_header(label ~ "**Variable**") %>%
+  modify_caption("**Componente 2**")
+
+tabla_t2
+
+#Tabla para componente 3
+genes3$Tercil_PC3 <- pca_terciles$Tercil_PC3
+
+# Crear la tabla descriptiva utilizando `tbl_summary`
+tabla_t3 <- genes %>%
+  tbl_summary(
+    by = Tercil_PC3,
+    statistic = list(all_continuous() ~ "{median} ({p25} - {p75})", all_categorical() ~ "{n} ({p}%)"), # se utiliza la mediana y el Rango itnercuartilico porque no son normales
+    missing = "no"  # Ignorar valores NA
+  ) %>%
+  add_p() %>%  # Agregar pruebas estadísticas entre grupos
+  modify_header(label ~ "**Variable**") %>%
+  modify_caption("**Componente 3**")
+tabla_t3
+
+#Tabla para componente 4
+genes$Tercil_PC4 <- pca_terciles$Tercil_PC4
+
+# Crear la tabla descriptiva utilizando `tbl_summary`
+tabla_t4 <- genes %>%
+  tbl_summary(
+    by = Tercil_PC4,
+    statistic = list(all_continuous() ~ "{median} ({p25} - {p75})", all_categorical() ~ "{n} ({p}%)"), # se utiliza la mediana y el Rango itnercuartilico porque no son normales
+    missing = "no"  # Ignorar valores NA
+  ) %>%
+  add_p() %>%  # Agregar pruebas estadísticas entre grupos
+  modify_header(label ~ "**Variable**") %>%
+  modify_caption("**Componente 4**")
+tabla_t4
+
+#Tabla para componente 5
+genes$Tercil_PC5 <- pca_terciles$Tercil_PC5
+
+# Crear la tabla descriptiva utilizando `tbl_summary`
+tabla_t5 <- genes %>%
+  tbl_summary(
+    by = Tercil_PC5,
+    statistic = list(all_continuous() ~ "{median} ({p25} - {p75})", all_categorical() ~ "{n} ({p}%)"), # se utiliza la mediana y el Rango itnercuartilico porque no son normales
+    missing = "no"  # Ignorar valores NA
+  ) %>%
+  add_p() %>%  # Agregar pruebas estadísticas entre grupos
+  modify_header(label ~ "**Variable**") %>%
+  modify_caption("**Componente 5**")
+tabla_t5
+
+#JUNTAR TODAS LAS TABLAS DE LOS 5 COMPONENTES
+tabla_combinada <- tbl_merge(
+  list(tabla_t1, tabla_t2, tabla_t3, tabla_t4, tabla_t5),
+  tab_spanner = c("**Componente 1**", "**Componente 2**", "**Componente 3**", "**Componente 4**", "**Componente 5**")  # (opcional) cambiar los títulos de las columnas agrupadas
+)
+
+tabla_combinada
