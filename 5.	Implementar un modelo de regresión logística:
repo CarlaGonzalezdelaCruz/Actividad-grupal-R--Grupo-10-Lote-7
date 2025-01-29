@@ -6,3 +6,107 @@ El formato de la tabla puedes guiarte tal y como se puede ver en la Tabla de reg
 •	Utiliza las funciones específicas vistas en el temario para evaluar la calidad del modelo, 
 además de las funciones específicas para sacar los parámetros (coeficientes exponenciados, IC 95 %, valores p) de cada variable introducida en el modelo. 
 •	Basándote en los resultados obtenidos, elabora un informe de 1 página como máximo sobre: que conclusiones sacas del análisis del caso práctico en el HTML después de los análisis.
+
+
+#Mi intención es, utilizar nuestras 5 dimensiones ya que explican más del 70% y, en este caso, he cogido como varibales independientes los síntomas. Me da error el 
+codigo, lo adjunto igualmente por si sirve de algo :(
+
+  # Instalar paquetes si no están instalados
+if (!require(flextable)) install.packages("flextable", dependencies = TRUE)
+if (!require(dplyr)) install.packages("dplyr", dependencies = TRUE)
+if (!require(broom)) install.packages("broom", dependencies = TRUE)
+
+# Cargar paquetes
+library(flexitable)
+library(dplyr)
+library(broom)
+
+# Extraer los nombres de las 5 primeras filas
+pca_components_names <- rownames(eigenvalues)[1:5]
+
+# Extraer los valores de la primera columna de esas filas
+pca_components_values <- eigenvalues[1:5, 1]
+
+# Combinar nombres y valores en un dataframe
+pca_components <- data.frame(Componente = pca_components_names, Valor = pca_components_values)
+
+# Mostrar el resultado
+print(pca_components)
+
+# Crear terciles de los 5 primeros componentes principales
+df <- df %>%
+  mutate(across(all_of(pca_components), ~ ntile(.x, 3), .names = "Tercil_{.col}"))   # Aqui me da error
+
+# Definir variables independientes
+variables2 <- c("tos", "disnea", "expect", "secrecion", "dolor_garg", "escalofrios", "fiebre", "diarrea", 
+                "nauseas", "vomitos", "cefalea", "mareo", "cansancio", "anosmia", "disgueusia", "dolor_hueso", 
+                "dolor_abdo", "perd_ape")
+
+# Crear una tabla vacía para almacenar los porcentajes
+tabla_porcentajes <- matrix(NA, nrow = length(variables2), ncol = 2, dimnames = list(variables2, c("Sí (%)", "No (%)")))
+
+# Bucle para calcular los porcentajes de cada variable con dos niveles
+for (i in 1:length(variables2)) {
+  # Convertir la variable a factor para asegurar que sea categórica
+  df[[variables2[i]]] <- as.factor(df[[variables2[i]]])
+  
+  # Verificar si la variable tiene exactamente dos niveles
+  if (length(levels(df[[variables2[i]]])) == 2) {
+    # Renombrar los niveles como "Sí" y "No"
+    levels(df[[variables2[i]]]) <- c("Sí", "No")
+    
+    # Calcular las frecuencias relativas (porcentajes) para la variable
+    prop <- prop.table(table(df[[variables2[i]]])) * 100  # Multiplicamos por 100 para obtener el porcentaje
+    
+    # Almacenar los porcentajes en la tabla
+    tabla_porcentajes[i, 1:length(prop)] <- round(prop, 2)  # Almacenamos los porcentajes redondeados a 2 decimales
+  } else {
+    # Si la variable no tiene dos niveles, asignar NA
+    tabla_porcentajes[i, ] <- NA
+  }
+}
+
+# Unir todas las variables en una sola lista
+variables <- c(paste0("Tercil_", rownames(eigenvalues[1:5, ])), variables2)
+
+# Crear una lista para almacenar los resultados
+resultados <- list()
+
+# Ajustar modelos de regresión logística con la variable dependiente "extension"
+for (var in variables) {
+  modelo <- glm(as.formula(paste("extension ~", var)), data = df, family = binomial)
+  resultados[[var]] <- tidy(modelo) %>% filter(term != "(Intercept)")
+}
+
+# Convertir la lista de modelos en un dataframe
+tabla_resultados <- bind_rows(resultados, .id = "Variable") %>%
+  mutate(OR = exp(estimate),
+         IC_95 = paste0(round(exp(conf.low), 2), " - ", round(exp(conf.high), 2)),
+         P_value = round(p.value, 3)) %>%
+  select(Variable, OR, IC_95, P_value)
+
+# Transformar el dataframe en formato de tabla similar a la imagen
+tabla <- tabla_resultados %>%
+  mutate(T1_OR = ifelse(grepl("Tercil", Variable), "1 (Ref.)", OR),
+         T1_P = ifelse(grepl("Tercil", Variable), "NA", P_value),
+         T2_OR = OR, T2_P = P_value,
+         T3_OR = OR, T3_P = P_value) %>%
+  select(Variable, T1_OR, T1_P, T2_OR, T2_P, T3_OR, T3_P)
+
+# Crear la tabla con flextable
+flextable(tabla) %>%
+  set_header_labels(
+    Variable = " ",
+    T1_OR = "OR (IC 95%)", T1_P = "P value",
+    T2_OR = "OR (IC 95%)", T2_P = "P value",
+    T3_OR = "OR (IC 95%)", T3_P = "P value"
+  ) %>%
+  add_header(
+    T1_OR = "T1", T1_P = "T1",
+    T2_OR = "T2", T2_P = "T2",
+    T3_OR = "T3", T3_P = "T3"
+  ) %>%
+  merge_h(part = "header") %>%
+  theme_vanilla() %>%
+  align(j = 2:7, align = "center", part = "all") %>%
+  autofit()
