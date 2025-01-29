@@ -1,0 +1,75 @@
+##### 4.	Crear una tabla descriptiva con las variables más importantes
+
+pca_ind <- as.data.frame(pca$x) # Extraer los valores de los componentes principales (scores) para los individuos
+
+# Dividir en terciles para cada componente
+terciles_componente_1 <- quantile(pca_ind$PC1, probs = c(0, 1/3, 2/3, 1))
+terciles_componente_2 <- quantile(pca_ind$PC2, probs = c(0, 1/3, 2/3, 1))
+terciles_componente_3 <- quantile(pca_ind$PC3, probs = c(0, 1/3, 2/3, 1))
+terciles_componente_4 <- quantile(pca_ind$PC4, probs = c(0, 1/3, 2/3, 1))
+terciles_componente_5 <- quantile(pca_ind$PC5, probs = c(0, 1/3, 2/3, 1))
+
+# Asignar a cada muestra su tercil correspondiente
+# Creo una nueva tabla que dice para cada paciente y componente, a cual tercil corresponde el valor del score
+pca_terciles <- data.frame(
+  id = rownames(pca_ind),
+  Componente_1 = cut(pca_ind$PC1, breaks = terciles_componente_1, labels = c("T1", "T2", "T3"), include.lowest = TRUE),
+  Componente_2 = cut(pca_ind$PC2, breaks = terciles_componente_2, labels = c("T1", "T2", "T3"), include.lowest = TRUE),
+  Componente_3 = cut(pca_ind$PC3, breaks = terciles_componente_3, labels = c("T1", "T2", "T3"), include.lowest = TRUE),
+  Componente_4 = cut(pca_ind$PC4, breaks = terciles_componente_4, labels = c("T1", "T2", "T3"), include.lowest = TRUE),
+  Componente_5 = cut(pca_ind$PC5, breaks = terciles_componente_5, labels = c("T1", "T2", "T3"), include.lowest = TRUE)
+)
+
+pca_terciles
+
+# Evalua normalidad de la distribución de la expresión génica
+#Anderson-Darling
+genes <- names(Dataset_expresión_genes)[startsWith(names(Dataset_expresión_genes), "AQ")]
+
+length(genes) #46
+
+pvalues_adtest <- data.frame(
+  Gen = character(46),                     
+  Anderson_Darling_pvalue = numeric(46)    
+)
+
+for (i in 1:46) {
+  pvalues_adtest[i,1] <- genes[i]
+  adtest_result <- ad.test(Dataset_expresión_genes[[genes[i]]])
+  pvalues_adtest[i,2] <- sprintf("%.5f", adtest_result$p.value)
+}
+
+print(arrange(pvalues_adtest, Anderson_Darling_pvalue))
+
+# El p-valor para todas las expresiones génicas es menor a 0.05, por lo que se concluye que ningún gen mostró distribución normal según el test de Anderson-Darling
+# En la tabla, calcularemos mediana y IQR
+
+
+# Tabla 3 
+# Creo primero una tabla que combina solo los datos que necesito, osea genes y tercil (e id)
+# La convierto a long para poder aplicar luego strata
+
+setdiff(Dataset_expresión_genes$id, pca_terciles$id)
+setdiff(pca_terciles$id, Dataset_expresión_genes$id)
+
+
+expgenica_terciles <- Dataset_expresión_genes %>%
+  select(id, starts_with("AQ_")) %>%
+  mutate(id = as.numeric(id)) %>% 
+  left_join(pca_terciles %>% mutate(id = as.numeric(id)), by = "id") %>%
+  pivot_longer(cols = starts_with("AQ_"),
+               names_to = "Gen",
+               values_to = "Expresion") %>%
+  pivot_longer(cols = starts_with("Componente_"),
+               names_to = "Componente",
+               values_to = "Tercil")
+
+tabla3 <- expgenica_terciles %>%
+  select(Componente, Tercil, all_of(genes)) %>%
+  tbl_strata(strata=Componente, #estratificamos 1ro por Componente
+             .tbl_fun = ~.x %>% 
+               tbl_summary(by=Tercil, #luego, estratificar por Tercil
+                           statistic = all_continuous() ~ "{median} ({p25} - {p75})", #ya que los genes no son parameticos
+                           digits = all_continuous() ~ function(x) format(x, digits = 2, scientific = TRUE)) %>%
+               add_p(test = list(all_continuous() ~ "kruskal.test"), 
+                     pvalue_fun =label_style_pvalue(digits = 1)))
