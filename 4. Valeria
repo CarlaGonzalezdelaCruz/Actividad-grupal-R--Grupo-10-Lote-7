@@ -74,20 +74,20 @@ levene_CP1$Homogeneidad <- ifelse(levene_CP1$pvalue > 0.05, "Sí", "No")
 
 print(arrange(levene_CP1, pvalue))
 
-PC1_hom <- levene_CP1 %>% # Usamos ANOVA
+CP1_hom <- levene_CP1 %>% # Usamos ANOVA
   filter(Homogeneidad == "Sí") %>%
   pull(Gen)
 
-PC1_no_hom <- levene_CP1 %>% # Usamos K-W
+CP1_no_hom <- levene_CP1 %>% # Usamos K-W
   filter(Homogeneidad == "No") %>%
   pull(Gen)  
 
-resumen_PC1 <- expgenica_CP1 %>%
+resumen_CP1 <- expgenica_CP1 %>%
   tbl_summary(by = Componente_1,
               statistic = all_continuous() ~ "{median} ({p25} - {p75})",
               digits = all_continuous() ~ function(x) format(x, digits = 2, scientific = TRUE)) %>%
-  add_p(test = list(all_of(PC1_hom) ~ "aov",
-                    all_of(PC1_no_hom) ~ "kruskal.test"),
+  add_p(test = list(all_of(CP1_hom) ~ "aov",
+                    all_of(CP1_no_hom) ~ "kruskal.test"),
         pvalue_fun = ~ style_pvalue(.x, digits = 3))
 
 
