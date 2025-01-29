@@ -12,7 +12,7 @@ terciles_componente_5 <- quantile(pca_ind$PC5, probs = c(0, 1/3, 2/3, 1))
 # Asignar a cada muestra su tercil correspondiente
 # Creo una nueva tabla que dice para cada paciente y componente, a cual tercil corresponde el valor del score
 pca_terciles <- data.frame(
-  id = rownames(pca_ind),
+  row = rownames(pca_ind),
   Componente_1 = cut(pca_ind$PC1, breaks = terciles_componente_1, labels = c("T1", "T2", "T3"), include.lowest = TRUE),
   Componente_2 = cut(pca_ind$PC2, breaks = terciles_componente_2, labels = c("T1", "T2", "T3"), include.lowest = TRUE),
   Componente_3 = cut(pca_ind$PC3, breaks = terciles_componente_3, labels = c("T1", "T2", "T3"), include.lowest = TRUE),
@@ -49,27 +49,45 @@ print(arrange(pvalues_adtest, Anderson_Darling_pvalue))
 # Creo primero una tabla que combina solo los datos que necesito, osea genes y tercil (e id)
 # La convierto a long para poder aplicar luego strata
 
-setdiff(Dataset_expresión_genes$id, pca_terciles$id)
-setdiff(pca_terciles$id, Dataset_expresión_genes$id)
-
+Dataset_expresión_genes <- Dataset_expresión_genes %>%
+  mutate(row = row_number())
 
 expgenica_terciles <- Dataset_expresión_genes %>%
-  select(id, starts_with("AQ_")) %>%
-  mutate(id = as.numeric(id)) %>% 
-  left_join(pca_terciles %>% mutate(id = as.numeric(id)), by = "id") %>%
-  pivot_longer(cols = starts_with("AQ_"),
-               names_to = "Gen",
-               values_to = "Expresion") %>%
-  pivot_longer(cols = starts_with("Componente_"),
-               names_to = "Componente",
-               values_to = "Tercil")
+  select(row, starts_with("AQ_")) %>%
+  mutate(row = as.numeric(row)) %>% 
+  left_join(pca_terciles %>% mutate(row = as.numeric(row)), by = "row") 
 
-tabla3 <- expgenica_terciles %>%
-  select(Componente, Tercil, all_of(genes)) %>%
-  tbl_strata(strata=Componente, #estratificamos 1ro por Componente
-             .tbl_fun = ~.x %>% 
-               tbl_summary(by=Tercil, #luego, estratificar por Tercil
-                           statistic = all_continuous() ~ "{median} ({p25} - {p75})", #ya que los genes no son parameticos
-                           digits = all_continuous() ~ function(x) format(x, digits = 2, scientific = TRUE)) %>%
-               add_p(test = list(all_continuous() ~ "kruskal.test"), 
-                     pvalue_fun =label_style_pvalue(digits = 1)))
+expgenica_CP1 <- select(expgenica_terciles, starts_with("AQ_"), Componente_1)
+
+levene_CP1 <- data.frame(
+  Gen = character(46),                     
+  pvalue = numeric(46)    
+)
+
+for (i in 1:46) {
+  levene_CP1[i,1] <- genes[i]
+  levene <- leveneTest(expgenica_CP1[[genes[i]]], expgenica_CP1$Componente_1)
+  levene_CP1[i,2] <- levene$`Pr(>F)`[1]
+}
+
+levene_CP1$Homogeneidad <- ifelse(levene_CP1$pvalue > 0.05, "Sí", "No")
+
+print(arrange(levene_CP1, pvalue))
+
+PC1_hom <- levene_CP1 %>% # Usamos ANOVA
+  filter(Homogeneidad == "Sí") %>%
+  pull(Gen)
+
+PC1_no_hom <- levene_CP1 %>% # Usamos K-W
+  filter(Homogeneidad == "No") %>%
+  pull(Gen)  
+
+resumen_PC1 <- expgenica_CP1 %>%
+  tbl_summary(by = Componente_1,
+              statistic = all_continuous() ~ "{median} ({p25} - {p75})",
+              digits = all_continuous() ~ function(x) format(x, digits = 2, scientific = TRUE)) %>%
+  add_p(test = list(all_of(PC1_hom) ~ "aov",
+                    all_of(PC1_no_hom) ~ "kruskal.test"),
+        pvalue_fun = ~ style_pvalue(.x, digits = 3))
+
+
