@@ -233,28 +233,18 @@ resumen_CP5 <- expgenica_CP5 %>%
 unique(Dataset_expresión_genes$extension)
 
 dataset_expresión_terciles <- Dataset_expresión_genes %>% #creo un nuevo dataframe con toda la info que puedo llegar a necestiar
-  mutate(row = as.numeric(row)) %>% 
+  mutate(row = as.numeric(row)) %>%
   left_join(pca_terciles %>% mutate(row = as.numeric(row)), by = "row") %>% #Uno la df original con los terciles
   mutate(metastasis = factor(if_else(extension == "metastasico", "sí", "no"))) %>% #creo la columna metastaris para ralizar la regresion logistica
   select(-c(1, 2, 57, 105)) #elimino las columnas ...1, id, row (que cree en el codigo del 3 para unir las df) y extension (ya que ahora tengo la de metastasis)
 
-modelo_logistica <- glm(metastasis ~ Componente_1 + Componente_2 + Componente_3 + Componente_4 + Componente_5, 
+modelo_logistica_componentes <- glm(metastasis ~ Componente_1 + Componente_2 + Componente_3 + Componente_4 + Componente_5, 
                         data= dataset_expresión_terciles, family = "binomial")
 
-summary(modelo_logistica) #la tabla no es interpretable, hay que usar exp para obtener el OR
-confint(modelo_logistica) # intervalo de confianza
-
-exp(modelo_logistica$coefficients) # las OR
-exp(confint(modelo_logistica)) # intervalo de confianza de las OR
-
 # Convertir coeficientes en OR (exponenciar)
-resultado <- tidy(modelo_logistica, exponentiate = TRUE, conf.int = TRUE) 
+resultado_logistica_componentes <- tidy(modelo_logistica_componentes, exponentiate = TRUE, conf.int = TRUE) 
 
-# Mostrar tabla en formato más visual
-tbl_regression(modelo_logistica, exponentiate = TRUE)
-
-
-resultado %>%
+resultado_logistica_componentes %>%
   select(term, estimate, conf.low, conf.high, p.value) %>%
   mutate(OR_IC = sprintf("%.2f (%.2f - %.2f)", estimate, conf.low, conf.high),
          p.value = format.pval(p.value, digits = 3, eps = 0.001)) %>%
@@ -262,4 +252,81 @@ resultado %>%
   gt()
 
 
+#reg para parametros bioquimicos
 
+bioquimica <- c('glucosa', 'leucocitos', 'linfocitos', 'neutrofilos', 'chol', 'hdl', 'hierro', 'igA', 'igE', 'igG', 'igN', 'ldl', 'pcr', 'transferrina', 'trigliceridos', 'cpk')
+
+modelo_logistica_bioquimica <- glm(metastasis ~ ., 
+                         data = dataset_expresión_terciles %>% select(metastasis, all_of(bioquimica)), 
+                         family = "binomial")
+
+resultado_logistica_bioquimica <- tidy(modelo_logistica_bioquimica, exponentiate = TRUE, conf.int = TRUE) 
+
+resultado_logistica_bioquimica %>%
+  select(term, estimate, conf.low, conf.high, p.value) %>%
+  mutate(OR_IC = sprintf("%.2f (%.2f - %.2f)", estimate, conf.low, conf.high),
+         p.value = format.pval(p.value, digits = 3, eps = 0.001)) %>%
+  select(term, OR_IC, p.value) %>%
+  gt()
+
+sintomas <- c('tos', 'disnea', 'expect', 'secrecion', 'dolor_garg', 'escalofrios', 'fiebre', 
+              'cansancio', 'cefalea', 'mareo', 'nauseas', 'vomitos', 'diarrea', 'dolor_hueso', 
+              'dolor_abdo', 'perd_ape', 'disgueusia')
+
+dataset_expresión_terciles_sintomas <- dataset_expresión_terciles %>%
+  mutate(across(all_of(sintomas), ~ if_else(. == "si", 1, if_else(. == "no", 0, NA_real_)))) #convierto a 0 y 1 para que no salgan raros los nombres de la primera fila
+
+modelo_logistica_sintomas <- glm(metastasis ~ ., 
+                                   data = dataset_expresión_terciles_sintomas %>% select(metastasis, all_of(sintomas)), 
+                                   family = "binomial")
+
+resultado_logistica_sintomas <- tidy(modelo_logistica_sintomas, exponentiate = TRUE, conf.int = TRUE) 
+
+resultado_logistica_sintomas %>%
+  select(term, estimate, conf.low, conf.high, p.value) %>%
+  mutate(OR_IC = sprintf("%.2f (%.2f - %.2f)", estimate, conf.low, conf.high),
+         p.value = format.pval(p.value, digits = 2, eps = 0.001)) %>%
+  select(term, OR_IC, p.value) %>%
+  gt()
+
+# la presencia de dolor abdominar y disnea son un riesgo estadisticamente significativo
+
+sociodemograficas <- c ('edad', 'sexo')
+
+dataset_expresión_terciles_sociodemograficas <- dataset_expresión_terciles %>%
+  mutate(sexo = if_else(sexo == "mujer", 1, if_else(sexo == "varon", 0, NA_real_)))
+
+modelo_logistica_sociodemograficas <- glm(metastasis ~ ., 
+                                 data = dataset_expresión_terciles_sociodemograficas %>% select(metastasis, all_of(sociodemograficas)), 
+                                 family = "binomial")
+
+resultado_logistica_sociodemograficas <- tidy(modelo_logistica_sociodemograficas, exponentiate = TRUE, conf.int = TRUE) 
+
+resultado_logistica_sociodemograficas %>%
+  select(term, estimate, conf.low, conf.high, p.value) %>%
+  mutate(OR_IC = sprintf("%.2f (%.2f - %.2f)", estimate, conf.low, conf.high),
+         p.value = format.pval(p.value, digits = 3, eps = 0.001)) %>%
+  select(term, OR_IC, p.value) %>%
+  gt()
+
+
+comorbilidades <- c("exfumador", "hta", "dm", "alergia", "cardiopatia", 
+                    "neumopatia", "hepatopatia", "colelitiasis", "utolitiasis", 
+                    "ITU", "renal", "neuropatia")
+
+dataset_expresión_terciles_comorbilidades <- dataset_expresión_terciles %>%
+  mutate(across(all_of(comorbilidades), ~ if_else(. == "si", 1, if_else(. == "no", 0, NA_real_)))) 
+
+
+modelo_logistica_comorbilidades <- glm(metastasis ~ ., 
+                                          data = dataset_expresión_terciles_comorbilidades %>% select(metastasis, all_of(comorbilidades)), 
+                                          family = "binomial")
+
+resultado_logistica_comorbilidades <- tidy(modelo_logistica_comorbilidades, exponentiate = TRUE, conf.int = TRUE) 
+
+resultado_logistica_comorbilidades %>%
+  select(term, estimate, conf.low, conf.high, p.value) %>%
+  mutate(OR_IC = sprintf("%.2f (%.2f - %.2f)", estimate, conf.low, conf.high),
+         p.value = format.pval(p.value, digits = 3, eps = 0.001)) %>%
+  select(term, OR_IC, p.value) %>%
+  gt()
