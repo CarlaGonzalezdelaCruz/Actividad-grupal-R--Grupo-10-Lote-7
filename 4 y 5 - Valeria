@@ -247,17 +247,12 @@ confint(modelo_logistica) # intervalo de confianza
 exp(modelo_logistica$coefficients) # las OR
 exp(confint(modelo_logistica)) # intervalo de confianza de las OR
 
-
-library(broom)
-library(gtsummary)
-
 # Convertir coeficientes en OR (exponenciar)
 resultado <- tidy(modelo_logistica, exponentiate = TRUE, conf.int = TRUE) 
 
 # Mostrar tabla en formato más visual
 tbl_regression(modelo_logistica, exponentiate = TRUE)
 
-library(gt)
 
 resultado %>%
   select(term, estimate, conf.low, conf.high, p.value) %>%
