@@ -123,12 +123,21 @@ fviz_pca_var(pca, col.var = "contrib",
 
 #Las variables con menor valor de cos son AQ_ADIPOQ y AQ_NOX. Mientras que las variables con mayor valor de cos son AQ_KJAK, AQ_SREBF, AQ_FASN, AQ_PTAFR. 
 #Vamos a visualizar la importancia de cada variable por dimensiones con los siguientes gráficos: 
+------------------------------------------ANA AMADOR ---------------------------------------------------------------------------------------------------
 #si ponemos axes = 1 es la dim 1  y si ponemos axes = 2 es la dimension 2.
-fviz_contrib(pca, choice = "var", axes = 1, top = 50) #dimension 1
-fviz_contrib(pca, choice = "var", axes = 2, top = 50) #dimension 2
-fviz_contrib(pca, choice = "var", axes = 1:2, top = 50) #dimension 1 y 2
+fviz_contrib(pca, choice = "var", axes = 1, top = 50)
+fviz_contrib(pca, choice = "var", axes = 2, top = 50)
+fviz_contrib(pca, choice = "var", axes = 3, top = 50)
+fviz_contrib(pca, choice = "var", axes = 4, top = 50)
+fviz_contrib(pca, choice = "var", axes = 5, top = 50)
 
--------ANA AMADOR--------
-# Considero que seria interesante ver tanto las interacciones de dimensiones 1:2, 2:3... como indivudalmente ya que hay genes que estan más potenciados en determinadas dimensiones. Me encargo de ello
+# Interacción de dimensiones con la dimension 1 que es la que más contribuye: 
+fviz_contrib(pca, choice = "var", axes = 1:2, top = 50)
+fviz_contrib(pca, choice = "var", axes = 1:2, top = 50) 
+fviz_contrib(pca, choice = "var", axes = 1:3, top = 50)
+fviz_contrib(pca, choice = "var", axes = 1:4, top = 50)
+fviz_contrib(pca, choice = "var", axes = 1:5, top = 50)
+
+
 
 --------------------------------------------------------------------------------------------------
