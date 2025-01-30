@@ -1,0 +1,270 @@
+##### 4.	Crear una tabla descriptiva con las variables más importantes
+
+pca_ind <- as.data.frame(pca$x) # Extraer los valores de los componentes principales (scores) para los individuos
+
+# Dividir en terciles para cada componente
+terciles_componente_1 <- quantile(pca_ind$PC1, probs = c(0, 1/3, 2/3, 1))
+terciles_componente_2 <- quantile(pca_ind$PC2, probs = c(0, 1/3, 2/3, 1))
+terciles_componente_3 <- quantile(pca_ind$PC3, probs = c(0, 1/3, 2/3, 1))
+terciles_componente_4 <- quantile(pca_ind$PC4, probs = c(0, 1/3, 2/3, 1))
+terciles_componente_5 <- quantile(pca_ind$PC5, probs = c(0, 1/3, 2/3, 1))
+
+# Asignar a cada muestra su tercil correspondiente
+# Creo una nueva tabla que dice para cada paciente y componente, a cual tercil corresponde el valor del score
+pca_terciles <- data.frame(
+  row = rownames(pca_ind),
+  Componente_1 = cut(pca_ind$PC1, breaks = terciles_componente_1, labels = c("T1", "T2", "T3"), include.lowest = TRUE),
+  Componente_2 = cut(pca_ind$PC2, breaks = terciles_componente_2, labels = c("T1", "T2", "T3"), include.lowest = TRUE),
+  Componente_3 = cut(pca_ind$PC3, breaks = terciles_componente_3, labels = c("T1", "T2", "T3"), include.lowest = TRUE),
+  Componente_4 = cut(pca_ind$PC4, breaks = terciles_componente_4, labels = c("T1", "T2", "T3"), include.lowest = TRUE),
+  Componente_5 = cut(pca_ind$PC5, breaks = terciles_componente_5, labels = c("T1", "T2", "T3"), include.lowest = TRUE)
+)
+
+pca_terciles
+
+# Evalua normalidad de la distribución de la expresión génica
+#Anderson-Darling
+genes <- names(Dataset_expresión_genes)[startsWith(names(Dataset_expresión_genes), "AQ")]
+
+length(genes) #46
+
+pvalues_adtest <- data.frame(
+  Gen = character(46),                     
+  Anderson_Darling_pvalue = numeric(46)    
+)
+
+for (i in 1:46) {
+  pvalues_adtest[i,1] <- genes[i]
+  adtest_result <- ad.test(Dataset_expresión_genes[[genes[i]]])
+  pvalues_adtest[i,2] <- sprintf("%.5f", adtest_result$p.value)
+}
+
+print(arrange(pvalues_adtest, Anderson_Darling_pvalue))
+
+# El p-valor para todas las expresiones génicas es menor a 0.05, por lo que se concluye que ningún gen mostró distribución normal según el test de Anderson-Darling
+# En la tabla, calcularemos mediana y IQR
+
+
+# Tabla 3 
+# Creo primero una tabla que combina solo los datos que necesito, osea genes y tercil (e id)
+# La convierto a long para poder aplicar luego strata
+
+Dataset_expresión_genes <- Dataset_expresión_genes %>%
+  mutate(row = row_number())
+
+expgenica_terciles <- Dataset_expresión_genes %>%
+  select(row, starts_with("AQ_")) %>%
+  mutate(row = as.numeric(row)) %>% 
+  left_join(pca_terciles %>% mutate(row = as.numeric(row)), by = "row") 
+
+expgenica_CP1 <- select(expgenica_terciles, starts_with("AQ_"), Componente_1)
+
+levene_CP1 <- data.frame(
+  Gen = character(46),                     
+  pvalue = numeric(46)    
+)
+
+for (i in 1:46) {
+  levene_CP1[i,1] <- genes[i]
+  levene <- leveneTest(expgenica_CP1[[genes[i]]], expgenica_CP1$Componente_1)
+  levene_CP1[i,2] <- levene$`Pr(>F)`[1]
+}
+
+levene_CP1$Homogeneidad <- ifelse(levene_CP1$pvalue > 0.05, "Sí", "No")
+
+print(arrange(levene_CP1, pvalue))
+
+CP1_hom <- levene_CP1 %>% # Usamos ANOVA
+  filter(Homogeneidad == "Sí") %>%
+  pull(Gen)
+
+CP1_no_hom <- levene_CP1 %>% # Usamos K-W
+  filter(Homogeneidad == "No") %>%
+  pull(Gen)  
+
+resumen_CP1 <- expgenica_CP1 %>%
+  tbl_summary(by = Componente_1,
+              statistic = all_continuous() ~ "{median} ({p25} - {p75})",
+              digits = all_continuous() ~ function(x) format(x, digits = 2, scientific = TRUE)) %>%
+  add_p(test = list(all_of(CP1_hom) ~ "aov",
+                    all_of(CP1_no_hom) ~ "kruskal.test"),
+        pvalue_fun = ~ style_pvalue(.x, digits = 3))
+
+
+expgenica_CP2 <- select(expgenica_terciles, starts_with("AQ_"), Componente_2)
+
+levene_CP2 <- data.frame(
+  Gen = character(46),                     
+  pvalue = numeric(46)    
+)
+
+for (i in 1:46) {
+  levene_CP2[i,1] <- genes[i]
+  levene <- leveneTest(expgenica_CP2[[genes[i]]], expgenica_CP2$Componente_2)
+  levene_CP2[i,2] <- levene$`Pr(>F)`[1]
+}
+
+levene_CP2$Homogeneidad <- ifelse(levene_CP2$pvalue > 0.05, "Sí", "No")
+
+print(arrange(levene_CP2, pvalue))
+
+CP2_hom <- levene_CP2 %>% # Usamos ANOVA
+  filter(Homogeneidad == "Sí") %>%
+  pull(Gen)
+
+CP2_no_hom <- levene_CP2 %>% # Usamos K-W
+  filter(Homogeneidad == "No") %>%
+  pull(Gen)  
+
+resumen_CP2 <- expgenica_CP2 %>%
+  tbl_summary(by = Componente_2,
+              statistic = all_continuous() ~ "{median} ({p25} - {p75})",
+              digits = all_continuous() ~ function(x) format(x, digits = 2, scientific = TRUE)) %>%
+  add_p(test = list(all_of(CP2_hom) ~ "aov",
+                    all_of(CP2_no_hom) ~ "kruskal.test"),
+        pvalue_fun = ~ style_pvalue(.x, digits = 3))
+
+
+expgenica_CP3 <- select(expgenica_terciles, starts_with("AQ_"), Componente_3)
+
+levene_CP3 <- data.frame(
+  Gen = character(46),                     
+  pvalue = numeric(46)    
+)
+
+for (i in 1:46) {
+  levene_CP3[i,1] <- genes[i]
+  levene <- leveneTest(expgenica_CP3[[genes[i]]], expgenica_CP3$Componente_3)
+  levene_CP3[i,2] <- levene$`Pr(>F)`[1]
+}
+
+levene_CP3$Homogeneidad <- ifelse(levene_CP3$pvalue > 0.05, "Sí", "No")
+
+print(arrange(levene_CP3, pvalue))
+
+CP3_hom <- levene_CP3 %>% # Usamos ANOVA
+  filter(Homogeneidad == "Sí") %>%
+  pull(Gen)
+
+CP3_no_hom <- levene_CP3 %>% # Usamos K-W
+  filter(Homogeneidad == "No") %>%
+  pull(Gen)  
+
+resumen_CP3 <- expgenica_CP3 %>%
+  tbl_summary(by = Componente_3,
+              statistic = all_continuous() ~ "{median} ({p25} - {p75})",
+              digits = all_continuous() ~ function(x) format(x, digits = 2, scientific = TRUE)) %>%
+  add_p(test = list(all_of(CP3_hom) ~ "aov",
+                    all_of(CP3_no_hom) ~ "kruskal.test"),
+        pvalue_fun = ~ style_pvalue(.x, digits = 3))
+
+
+expgenica_CP4 <- select(expgenica_terciles, starts_with("AQ_"), Componente_4)
+
+levene_CP4 <- data.frame(
+  Gen = character(46),                     
+  pvalue = numeric(46)    
+)
+
+for (i in 1:46) {
+  levene_CP4[i,1] <- genes[i]
+  levene <- leveneTest(expgenica_CP4[[genes[i]]], expgenica_CP4$Componente_4)
+  levene_CP4[i,2] <- levene$`Pr(>F)`[1]
+}
+
+levene_CP4$Homogeneidad <- ifelse(levene_CP4$pvalue > 0.05, "Sí", "No")
+
+print(arrange(levene_CP4, pvalue))
+
+CP4_hom <- levene_CP4 %>% # Usamos ANOVA
+  filter(Homogeneidad == "Sí") %>%
+  pull(Gen)
+
+CP4_no_hom <- levene_CP4 %>% # Usamos K-W
+  filter(Homogeneidad == "No") %>%
+  pull(Gen)  
+
+resumen_CP4 <- expgenica_CP4 %>%
+  tbl_summary(by = Componente_4,
+              statistic = all_continuous() ~ "{median} ({p25} - {p75})",
+              digits = all_continuous() ~ function(x) format(x, digits = 2, scientific = TRUE)) %>%
+  add_p(test = list(all_of(CP4_hom) ~ "aov",
+                    all_of(CP4_no_hom) ~ "kruskal.test"),
+        pvalue_fun = ~ style_pvalue(.x, digits = 3))
+
+
+
+expgenica_CP5 <- select(expgenica_terciles, starts_with("AQ_"), Componente_5)
+
+levene_CP5 <- data.frame(
+  Gen = character(46),                     
+  pvalue = numeric(46)    
+)
+
+for (i in 1:46) {
+  levene_CP5[i,1] <- genes[i]
+  levene <- leveneTest(expgenica_CP5[[genes[i]]], expgenica_CP5$Componente_5)
+  levene_CP5[i,2] <- levene$`Pr(>F)`[1]
+}
+
+levene_CP5$Homogeneidad <- ifelse(levene_CP5$pvalue > 0.05, "Sí", "No")
+
+print(arrange(levene_CP5, pvalue))
+
+CP5_hom <- levene_CP5 %>% # Usamos ANOVA
+  filter(Homogeneidad == "Sí") %>%
+  pull(Gen)
+
+CP5_no_hom <- levene_CP5 %>% # Usamos K-W
+  filter(Homogeneidad == "No") %>%
+  pull(Gen)  
+
+resumen_CP5 <- expgenica_CP5 %>%
+  tbl_summary(by = Componente_5,
+              statistic = all_continuous() ~ "{median} ({p25} - {p75})",
+              digits = all_continuous() ~ function(x) format(x, digits = 2, scientific = TRUE)) %>%
+  add_p(test = list(all_of(CP5_hom) ~ "aov",
+                    all_of(CP5_no_hom) ~ "kruskal.test"),
+        pvalue_fun = ~ style_pvalue(.x, digits = 3))
+
+
+#### 5.	Implementar un modelo de regresión logística
+
+unique(Dataset_expresión_genes$extension)
+
+dataset_expresión_terciles <- Dataset_expresión_genes %>% #creo un nuevo dataframe con toda la info que puedo llegar a necestiar
+  mutate(row = as.numeric(row)) %>% 
+  left_join(pca_terciles %>% mutate(row = as.numeric(row)), by = "row") %>% #Uno la df original con los terciles
+  mutate(metastasis = factor(if_else(extension == "metastasico", "sí", "no"))) %>% #creo la columna metastaris para ralizar la regresion logistica
+  select(-c(1, 2, 57, 105)) #elimino las columnas ...1, id, row (que cree en el codigo del 3 para unir las df) y extension (ya que ahora tengo la de metastasis)
+
+modelo_logistica <- glm(metastasis ~ Componente_1 + Componente_2 + Componente_3 + Componente_4 + Componente_5, 
+                        data= dataset_expresión_terciles, family = "binomial")
+
+summary(modelo_logistica) #la tabla no es interpretable, hay que usar exp para obtener el OR
+confint(modelo_logistica) # intervalo de confianza
+
+exp(modelo_logistica$coefficients) # las OR
+exp(confint(modelo_logistica)) # intervalo de confianza de las OR
+
+
+library(broom)
+library(gtsummary)
+
+# Convertir coeficientes en OR (exponenciar)
+resultado <- tidy(modelo_logistica, exponentiate = TRUE, conf.int = TRUE) 
+
+# Mostrar tabla en formato más visual
+tbl_regression(modelo_logistica, exponentiate = TRUE)
+
+library(gt)
+
+resultado %>%
+  select(term, estimate, conf.low, conf.high, p.value) %>%
+  mutate(OR_IC = sprintf("%.2f (%.2f - %.2f)", estimate, conf.low, conf.high),
+         p.value = format.pval(p.value, digits = 3, eps = 0.001)) %>%
+  select(term, OR_IC, p.value) %>%
+  gt()
+
+
+
