@@ -1,3 +1,171 @@
+Dataset_expresión_genes <- read_csv("Master en Bioinformática/Estadística y R para Ciencias de la Salud/Actividad grupal/Dataset expresión genes.csv")
+Dataset_expresión_genes <- Dataset_expresión_genes %>%  filter(id != 14)
+
+library(tidyverse)
+library(factoextra)
+library(gtsummary)
+library(gt)
+library(car) # Levene
+library(broom) #Tabla regresion
+
+
+any(is.na(Dataset_expresión_genes)) #Confirmo que no hay datos NA
+
+datos_expresiongenica <- Dataset_expresión_genes %>%
+  select(starts_with("AQ_"))
+
+#### 2. PCA
+
+#Normalidad de exp genica con shapiro
+resultados_saphiro <- apply(datos_expresiongenica, 2, function(x) shapiro.test(x)$p.value)
+resultados_saphiro
+#creo una tabla con los datos de normalidad
+tabla_resultados <- data.frame(
+  Variantes = colnames(datos_expresiongenica),
+  p_valor = format(resultados_saphiro, digits = 3, scientific = TRUE), 
+  Test = rep("Shapiro-Wilk", length(resultados_saphiro)), 
+  Interpretacion = ifelse(resultados_saphiro < 0.05, "No normal", "Normal")
+)
+tabla_resultados
+
+#PCA
+pca<- prcomp(datos_expresiongenica, scale=TRUE)
+summary(pca)
+
+eigenvalues <- get_eigenvalue(pca)
+eigenvalues_formatted <- eigenvalues
+eigenvalues_formatted[] <- lapply(eigenvalues_formatted, function(x) sprintf("%.3f", as.numeric(x)))
+print(eigenvalues_formatted) #5 dim
+
+fviz_eig(pca, addlabels = TRUE, ylim = c(0, 50)) 
+
+# Crear una tabla con los componentes principales y R2
+tabla_pca_r2 <- data.frame(
+  Componente = paste0("Dim.", 1:5),  # Selecciona las primeras 5 dimensiones
+  R2 = sprintf("%.3f", eigenvalues$variance.percent[1:5])  # Extrae y formatea el porcentaje de varianza explicada
+)
+
+tabla_pca_r2
+
+##Tabla PCA cargas
+# Obtener las cargas de las variables en los componentes principales
+cargas <- pca$rotation  # Las cargas están en la matriz 'rotation'
+
+# Seleccionar solo los primeros n componentes (en este caso, 5 componentes)
+cargas_seleccionadas <- as.data.frame(cargas[, 1:5])
+
+# Añadir los nombres de las variables como una columna
+cargas_seleccionadas <- tibble::rownames_to_column(cargas_seleccionadas, var = "Variable")
+
+# Renombrar las columnas para mayor claridad
+colnames(cargas_seleccionadas) <- c("Variable", "Componente 1", "Componente 2", 
+                                    "Componente 3", "Componente 4", "Componente 5")
+
+# Formatear las cargas con 3 decimales
+cargas_seleccionadas <- cargas_seleccionadas %>%
+  mutate(across(-Variable, ~ sprintf("%.3f", .)))
+
+# Mostrar la tabla
+cargas_seleccionadas
+
+### Correlación entre dimensiones y funciones biológicas:
+#Componente 1:Inflamación Sistémica y Señalización Celular
+
+#Componente 2: Regulación Inmune y Estrés Oxidativo
+
+#Componente 3: Metabolismo Celular y Resistencia al Estrés
+
+#Componente 4: Homeostasis Metabólica y Respuesta Antioxidante
+
+#Componente 5: Inflamación y Diferenciación Inmune
+
+#### 3.	Crear gráficos descriptivos de los componentes principales
+
+var <- get_pca_var(pca)
+var
+
+fviz_pca_var(pca, col.var = "black")
+
+variables_1_2 <- fviz_pca_var(
+  pca, 
+  col.var = "cos2", 
+  gradient.cols = c("blue", "yellow", "red"), 
+  repel = TRUE # Evitar el solapamiento de etiquetas
+)
+
+variables_1_3 <- fviz_pca_var(
+  pca, 
+  axes = c(1, 3),  # Comparar la Dim 1 y Dim 3
+  col.var = "cos2", 
+  gradient.cols = c("blue", "yellow", "red"), 
+  repel = TRUE  # Evitar el solapamiento de etiquetas
+)
+
+variables_1_4 <- fviz_pca_var(
+  pca, 
+  axes = c(1, 4),  # Comparar la Dim 1 y Dim 3
+  col.var = "cos2", 
+  gradient.cols = c("blue", "yellow", "red"), 
+  repel = TRUE  # Evitar el solapamiento de etiquetas
+)
+
+variables_1_5 <- fviz_pca_var(
+  pca, 
+  axes = c(1, 5),  # Comparar la Dim 1 y Dim 3
+  col.var = "cos2", 
+  gradient.cols = c("blue", "yellow", "red"), 
+  repel = TRUE  # Evitar el solapamiento de etiquetas
+)
+
+variables_2_3 <- fviz_pca_var(
+  pca, 
+  axes = c(2, 3),  # Comparar la Dim 1 y Dim 3
+  col.var = "cos2", 
+  gradient.cols = c("blue", "yellow", "red"), 
+  repel = TRUE  # Evitar el solapamiento de etiquetas
+)
+
+variables_3_4 <- fviz_pca_var(
+  pca, 
+  axes = c(3, 4),  # Comparar la Dim 1 y Dim 3
+  col.var = "cos2", 
+  gradient.cols = c("blue", "yellow", "red"))
+
+fviz_cos2(pca, choice = "var", axes = 1:2)
+
+fviz_contrib(pca, choice = "var", axes = 1, top = 10)
+
+fviz_contrib(pca, choice = "var", axes = 2, top = 10)
+
+fviz_contrib(pca, choice = "var", axes = 3, top = 10)
+
+fviz_contrib(pca, choice = "var", axes = 4, top = 10)
+
+fviz_contrib(pca, choice = "var", axes = 5, top = 10)
+
+fviz_pca_ind(pca, col.var = "cos2",
+  gradient.cols = c("blue", "yellow", "red"),
+  repel = TRUE)
+
+fviz_pca_ind(pca, pointsize = "cos2",
+             repel = TRUE)
+
+# Realizar k-means sobre las variables 
+kmeans_var <- kmeans(t(pca$rotation), centers = 3)  # Transponer para que las variables sean filas
+
+# Crear un vector que indique el cluster al que pertenece cada variable
+grupo_var <- as.factor(kmeans_var$cluster)
+
+# Visualizar las variables del PCA agrupadas por sus clusters
+fviz_pca_var(
+  pca,
+  col.var = grupo_var,                    # Colorear variables por clusters
+  palette = c("grey", "yellow", "blue"),  # Paleta de colores
+  legend.title = "Cluster",               # Título de la leyenda
+  repel = TRUE                            # Evitar superposición de etiquetas
+)
+
+
 ##### 4.	Crear una tabla descriptiva con las variables más importantes
 
 pca_ind <- as.data.frame(pca$x) # Extraer los valores de los componentes principales (scores) para los individuos
