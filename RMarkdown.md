@@ -388,16 +388,13 @@ modelo_logistica_componentes <- glm(metastasis ~ Componente_1 + Componente_2 + C
 # Convertir coeficientes en OR (exponenciar)
 resultado_logistica_componentes <- tidy(modelo_logistica_componentes, exponentiate = TRUE, conf.int = TRUE) 
 
-modelo_logistica_componentes
-```
-
-```{r}
 resultado_logistica_componentes %>%
   select(term, estimate, conf.low, conf.high, p.value) %>%
   mutate(OR_IC = sprintf("%.1f (%.1f - %.1f)", estimate, conf.low, conf.high),
          p.value = format.pval(p.value, digits = 3, eps = 0.001)) %>%
   select(term, OR_IC, p.value) %>%
-  gt()
+  gt() %>%
+  tab_header(title = "Riesgo de metástasis según componente")
 ```
 
 ```{r}
@@ -406,9 +403,13 @@ sintomas <- c('tos', 'disnea', 'expect', 'secrecion', 'dolor_garg', 'escalofrios
               'dolor_abdo', 'perd_ape', 'disgueusia')
 
 dataset_expresión_terciles_sintomas <- dataset_expresión_terciles %>%
-  select (all_of(sintomas)) %>%
+  select (metastasis, all_of(sintomas)) %>%
   mutate(across(all_of(sintomas), ~ if_else(. == "si", 1, if_else(. == "no", 0, NA_real_)))) #convierto a 0 y 1 para que no salgan raros los nombres de la primera fila
 
+dataset_expresión_terciles_sintomas
+```
+
+```{r}
 modelo_logistica_sintomas <- glm(metastasis ~ ., 
                                    data = dataset_expresión_terciles_sintomas %>% select(metastasis, all_of(sintomas)), 
                                    family = "binomial")
@@ -420,9 +421,10 @@ resultado_logistica_sintomas %>%
   mutate(OR_IC = sprintf("%.1f (%.1f - %.1f)", estimate, conf.low, conf.high),
          p.value = format.pval(p.value, digits = 2, eps = 0.001)) %>%
   select(term, OR_IC, p.value) %>%
-  gt()
+  gt() %>%
+  tab_header(title = "Riesgo de metástasis según síntoma")
 
-# la presencia de dolor abdominar y disnea son un riesgo estadisticamente significativo
+resultado_logistica_sintomas
 ```
 
 ```{r}
