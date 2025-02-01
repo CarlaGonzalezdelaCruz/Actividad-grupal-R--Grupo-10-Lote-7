@@ -220,12 +220,18 @@ expgenica_terciles <- Dataset_expresión_genes %>%
 colnames(expgenica_terciles)
 ```
 
+Cómo último paso antes de comenzar a generar las tablas que resuman los estadísticos de los genes, creamos un vector que contiene el nombre de los genes del dataset:
+
 ```{r genes}
 genes <- names(Dataset_expresión_genes)[startsWith(names(Dataset_expresión_genes), "AQ")]
 ```
 
-```{r, message=FALSE, warning=FALSE}
-expgenica_CP1 <- select(expgenica_terciles, starts_with("AQ_"), Componente_1)
+Con el objetivo de poder aplicar todos los tests estadísticos pertinentes, realizamos tablas separadas para cada componente. Este resumen, para cada tercil, la mediana y el rango intercuartílico de la expresión de cada gen, así como el valor p que indica si la diferencia entre los cuartiles es significativa.
+
+Respetando el orden de los componentes, analizamos primero la expresión génica en función de los scores individuales calculados para el componente 1 (Inflamación Sistémica y Señalización Celular). Utilizamos el test de Levene para determinar si, al agrupar a los pacientes por tercil, la expresión génica es paramétrica u homogénea entre los tres grupos. 
+
+```{r}
+expgenica_CP1 <- select(expgenica_terciles, starts_with("AQ_"), Componente_1) # Extraer la expresión génica y solo la data sobre los terciles del componente 1
 
 levene_CP1 <- data.frame(
   Gen = character(46),                     
@@ -241,7 +247,11 @@ for (i in 1:46) {
 levene_CP1$Homogeneidad <- ifelse(levene_CP1$pvalue > 0.05, "Sí", "No")
 
 print(arrange(levene_CP1, pvalue))
+```
 
+Como puede observarse en la tabla, solo 5 genes evidencian una distribución homogénea. Guardamos estos genes en un vector para poder luego aplicar ANOVA, el cual es indicado cuando hay 2 o más grupos independientes y presentan homogeneidad de varianzas. El resto de los genes son guardados en un vector separado, para poder luego aplicar el test de Kruskal-Wallis, que es utilizado cuando hay 2 o más grupos independientes, pero no presentan homogeneidad de varianzas.
+
+```{r}
 CP1_hom <- levene_CP1 %>% # Usamos ANOVA
   filter(Homogeneidad == "Sí") %>%
   pull(Gen)
@@ -249,7 +259,11 @@ CP1_hom <- levene_CP1 %>% # Usamos ANOVA
 CP1_no_hom <- levene_CP1 %>% # Usamos K-W
   filter(Homogeneidad == "No") %>%
   pull(Gen)  
+```
 
+Finalmente, creamos una tabla resumen que contiene las medianas y rangos intercuartílicos de la expresión de cada gen agrupado por tercil, así como el valor p que indica si la diferencia entre dichos grupos es o no significativa.
+
+```{r, message=FALSE, warning=FALSE}
 resumen_CP1 <- expgenica_CP1 %>%
   tbl_summary(by = Componente_1,
               statistic = all_continuous() ~ "{median} ({p25} - {p75})",
@@ -261,6 +275,52 @@ resumen_CP1 <- expgenica_CP1 %>%
 
 
 resumen_CP1
+```
+
+Para la gran mayoría de los genes (exceptuando AQ_ADIPOQ, AQ_LIF, AQ_NOX5 y AQ_SLC2A4), se observan p-valores menores a 0.05. Estos indican que se rechaza la hipótesis nula, lo que sugiere que al menos un grupo de pacientes, clasificado según el tercil del score del PCA, tiene una mediana de expresión génica significativamente diferente a las otras. No es de sorprender que, para el componente 1—que explica la mayor varianza de los datos y está relacionado con la inflamación sistémica y señalización celular—se observe una diferencia estadísticamente significativa de la expresión de la gran mayoría de los genes según la magnitud del score del paciente.
+
+Procedemos de la misma manera con el segundo componente (Regulación Inmune y Estrés Oxidativo):
+
+```{r}
+expgenica_CP2 <- select(expgenica_terciles, starts_with("AQ_"), Componente_2)
+
+levene_CP2 <- data.frame(
+  Gen = character(46),                     
+  pvalue = numeric(46)    
+)
+
+for (i in 1:46) {
+  levene_CP2[i,1] <- genes[i]
+  levene <- leveneTest(expgenica_CP2[[genes[i]]], expgenica_CP2$Componente_2)
+  levene_CP2[i,2] <- levene$`Pr(>F)`[1]
+}
+
+levene_CP2$Homogeneidad <- ifelse(levene_CP2$pvalue > 0.05, "Sí", "No")
+
+print(arrange(levene_CP2, pvalue))
+```
+
+Nuevamente, consideramos los resultados del test de Levene para agrupar los genes en función de la homogeneidad de varianzas y aplicar ANOVA o Kruskal-Wallis según corresponda:
+
+```{r, message=FALSE, warning=FALSE}
+CP2_hom <- levene_CP2 %>% # Usamos ANOVA
+  filter(Homogeneidad == "Sí") %>%
+  pull(Gen)
+
+CP2_no_hom <- levene_CP2 %>% # Usamos K-W
+  filter(Homogeneidad == "No") %>%
+  pull(Gen)  
+
+resumen_CP2 <- expgenica_CP2 %>%
+  tbl_summary(by = Componente_2,
+              statistic = all_continuous() ~ "{median} ({p25} - {p75})",
+              digits = all_continuous() ~ function(x) format(x, digits = 2, scientific = TRUE)) %>%
+  add_p(test = list(all_of(CP2_hom) ~ "aov",
+                    all_of(CP2_no_hom) ~ "kruskal.test"),
+        pvalue_fun = ~ style_pvalue(.x, digits = 3))  %>%
+  modify_caption("**Componente 2. Regulación Inmune y Estrés Oxidativo**")
+
+resumen_CP2
 ```
 
 ```{r, message=FALSE, warning=FALSE}
@@ -300,8 +360,12 @@ resumen_CP2 <- expgenica_CP2 %>%
 
 resumen_CP2
 ```
+#### analisis tabla resumen_CP2
 
-```{r, message=FALSE, warning=FALSE}
+A continuación, pueden observarse el código y las tablas correspondientes al análisis de los componentes 3, 4 y 5:
+
+
+```{r}
 expgenica_CP3 <- select(expgenica_terciles, starts_with("AQ_"), Componente_3)
 
 levene_CP3 <- data.frame(
@@ -318,7 +382,9 @@ for (i in 1:46) {
 levene_CP3$Homogeneidad <- ifelse(levene_CP3$pvalue > 0.05, "Sí", "No")
 
 print(arrange(levene_CP3, pvalue))
+```
 
+```{r, message=FALSE, warning=FALSE}
 CP3_hom <- levene_CP3 %>% # Usamos ANOVA
   filter(Homogeneidad == "Sí") %>%
   pull(Gen)
@@ -338,8 +404,9 @@ resumen_CP3 <- expgenica_CP3 %>%
 
 resumen_CP3
 ```
+#### analisis tabla resumen_CP3
 
-```{r, message=FALSE, warning=FALSE}
+```{r}
 expgenica_CP4 <- select(expgenica_terciles, starts_with("AQ_"), Componente_4)
 
 levene_CP4 <- data.frame(
@@ -356,7 +423,9 @@ for (i in 1:46) {
 levene_CP4$Homogeneidad <- ifelse(levene_CP4$pvalue > 0.05, "Sí", "No")
 
 print(arrange(levene_CP4, pvalue))
+```
 
+```{r, message=FALSE, warning=FALSE}
 CP4_hom <- levene_CP4 %>% # Usamos ANOVA
   filter(Homogeneidad == "Sí") %>%
   pull(Gen)
@@ -376,8 +445,9 @@ resumen_CP4 <- expgenica_CP4 %>%
 
 resumen_CP4
 ```
+#### analisis tabla resumen_CP4
 
-```{r, message=FALSE, warning=FALSE}
+```{r}
 expgenica_CP5 <- select(expgenica_terciles, starts_with("AQ_"), Componente_5)
 
 levene_CP5 <- data.frame(
@@ -395,6 +465,9 @@ levene_CP5$Homogeneidad <- ifelse(levene_CP5$pvalue > 0.05, "Sí", "No")
 
 print(arrange(levene_CP5, pvalue))
 
+```
+
+```{r, message=FALSE, warning=FALSE}
 CP5_hom <- levene_CP5 %>% # Usamos ANOVA
   filter(Homogeneidad == "Sí") %>%
   pull(Gen)
@@ -410,11 +483,14 @@ resumen_CP5 <- expgenica_CP5 %>%
   add_p(test = list(all_of(CP5_hom) ~ "aov",
                     all_of(CP5_no_hom) ~ "kruskal.test"),
         pvalue_fun = ~ style_pvalue(.x, digits = 3)) %>%
-        modify_caption("**Componente 5**") %>%
         modify_caption("**Componente 5. Inflamación y Diferenciación Inmune**")
 
 resumen_CP5
 ```
+#### analisis tabla resumen_CP5
+
+
+Finalmente, el siguiente código reúne las 5 tablas en una única tabla que resume los estadísticos obtenidos:
 
 ```{r}
 tabla_combinada <- tbl_merge(
