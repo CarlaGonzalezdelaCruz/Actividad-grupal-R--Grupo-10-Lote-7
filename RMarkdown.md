@@ -158,11 +158,11 @@ expgenica_terciles <- Dataset_expresión_genes %>%
 colnames(expgenica_terciles)
  ```
 
-```{r}
+```{r genes}
 genes <- names(Dataset_expresión_genes)[startsWith(names(Dataset_expresión_genes), "AQ")]
 ```
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 expgenica_CP1 <- select(expgenica_terciles, starts_with("AQ_"), Componente_1)
 
 levene_CP1 <- data.frame(
@@ -194,10 +194,14 @@ resumen_CP1 <- expgenica_CP1 %>%
               digits = all_continuous() ~ function(x) format(x, digits = 2, scientific = TRUE)) %>%
   add_p(test = list(all_of(CP1_hom) ~ "aov",
                     all_of(CP1_no_hom) ~ "kruskal.test"),
-        pvalue_fun = ~ style_pvalue(.x, digits = 3))
+        pvalue_fun = ~ style_pvalue(.x, digits = 3)) %>%
+  modify_caption("**Componente 1. Inflamación Sistémica y Señalización Celular**")
+
+
+resumen_CP1
 ```
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 expgenica_CP2 <- select(expgenica_terciles, starts_with("AQ_"), Componente_2)
 
 levene_CP2 <- data.frame(
@@ -229,10 +233,13 @@ resumen_CP2 <- expgenica_CP2 %>%
               digits = all_continuous() ~ function(x) format(x, digits = 2, scientific = TRUE)) %>%
   add_p(test = list(all_of(CP2_hom) ~ "aov",
                     all_of(CP2_no_hom) ~ "kruskal.test"),
-        pvalue_fun = ~ style_pvalue(.x, digits = 3))
+        pvalue_fun = ~ style_pvalue(.x, digits = 3)) %>%
+  modify_caption("**Componente 2. Regulación Inmune y Estrés Oxidativo**")
+
+resumen_CP2
 ```
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 expgenica_CP3 <- select(expgenica_terciles, starts_with("AQ_"), Componente_3)
 
 levene_CP3 <- data.frame(
@@ -264,10 +271,13 @@ resumen_CP3 <- expgenica_CP3 %>%
               digits = all_continuous() ~ function(x) format(x, digits = 2, scientific = TRUE)) %>%
   add_p(test = list(all_of(CP3_hom) ~ "aov",
                     all_of(CP3_no_hom) ~ "kruskal.test"),
-        pvalue_fun = ~ style_pvalue(.x, digits = 3))
+        pvalue_fun = ~ style_pvalue(.x, digits = 3)) %>%
+  modify_caption("**Componente 3. Metabolismo Celular y Resistencia al Estrés**")
+
+resumen_CP3
 ```
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 expgenica_CP4 <- select(expgenica_terciles, starts_with("AQ_"), Componente_4)
 
 levene_CP4 <- data.frame(
@@ -299,10 +309,13 @@ resumen_CP4 <- expgenica_CP4 %>%
               digits = all_continuous() ~ function(x) format(x, digits = 2, scientific = TRUE)) %>%
   add_p(test = list(all_of(CP4_hom) ~ "aov",
                     all_of(CP4_no_hom) ~ "kruskal.test"),
-        pvalue_fun = ~ style_pvalue(.x, digits = 3))
+        pvalue_fun = ~ style_pvalue(.x, digits = 3)) %>%
+  modify_caption("**Componente 4. Homeostasis Metabólica y Respuesta Antioxidante**")
+
+resumen_CP4
 ```
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 expgenica_CP5 <- select(expgenica_terciles, starts_with("AQ_"), Componente_5)
 
 levene_CP5 <- data.frame(
@@ -335,14 +348,23 @@ resumen_CP5 <- expgenica_CP5 %>%
   add_p(test = list(all_of(CP5_hom) ~ "aov",
                     all_of(CP5_no_hom) ~ "kruskal.test"),
         pvalue_fun = ~ style_pvalue(.x, digits = 3)) %>%
-        modify_caption("**Componente 5**")
+        modify_caption("**Componente 5**") %>%
+        modify_caption("**Componente 5. Inflamación y Diferenciación Inmune**")
+
+resumen_CP5
 ```
 
 ```{r}
 tabla_combinada <- tbl_merge(
   list(resumen_CP1, resumen_CP2, resumen_CP3, resumen_CP4, resumen_CP5),
-  tab_spanner = c("**Componente 1**", "**Componente 2**", "**Componente 3**", "**Componente 4**", "**Componente 5**")  # (opcional) cambiar los títulos de las columnas agrupadas
-)
+  tab_spanner = c("**Componente 1. Inflamación Sistémica y Señalización Celular**", 
+                  "**Componente 2. Regulación Inmune y Estrés Oxidativo**", 
+                  "**Componente 3. Metabolismo Celular y Resistencia al Estrés**", 
+                  "**Componente 4. Homeostasis Metabólica y Respuesta Antioxidante**", 
+                  "**Componente 5. Inflamación y Diferenciación Inmune**")  
+  ) %>%
+  modify_caption("**Expresión génica por componente y tercil**")%>% 
+  modify_header(label ~ "**Gen**")
 ```
 
 ## Implementar un modelo de regresión logística
