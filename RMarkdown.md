@@ -28,6 +28,7 @@ library(gtsummary)
 library(gt)
 library(car) 
 library(broom)
+library(plotly)
 ```
 
 Antes de comenzar con el análisis, confirmamos la ausencia de valores "NA" en el dataset.
