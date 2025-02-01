@@ -122,8 +122,10 @@ Teniendo en cuenta los valores de los scores y la contribución de cada gen a ca
 
 ## Expresión génica en función de las cargas de los pacientes
 
+Para proceder con el análisis, determinaremos las estadísticas descriptivas de la expresión génica (mediana y rango intercuartílico, ya que su distribución no es normal) luego de dividir a los individuos en tres terciles según su score de CPA. Por ende, en primer lugar calculamos dichos terciles. Generamos una nueva tabla que indica a qué tercil pertenece cada paciente dentro de cada componente.
+
 ```{r} 
-pca_ind <- as.data.frame(pca$x) # Extraer los valores de los componentes principales (scores) para los individuos
+pca_ind <- as.data.frame(pca$x) # Extraer los valores de los scores para los individuos
 
 # Dividir en terciles para cada componente
 terciles_componente_1 <- quantile(pca_ind$PC1, probs = c(0, 1/3, 2/3, 1))
@@ -132,10 +134,9 @@ terciles_componente_3 <- quantile(pca_ind$PC3, probs = c(0, 1/3, 2/3, 1))
 terciles_componente_4 <- quantile(pca_ind$PC4, probs = c(0, 1/3, 2/3, 1))
 terciles_componente_5 <- quantile(pca_ind$PC5, probs = c(0, 1/3, 2/3, 1))
 
-# Asignar a cada muestra su tercil correspondiente
-# Creo una nueva tabla que dice para cada paciente y componente, a cual tercil corresponde el valor del score
+# Asignar a cada muestra su tercil correspondiente dentro de una nueva tabla 
 pca_terciles <- data.frame(
-  row = rownames(pca_ind),
+  row = rownames(pca_ind), # Requeriremos esta columna para unir esta tabla a otra
   Componente_1 = cut(pca_ind$PC1, breaks = terciles_componente_1, labels = c("T1", "T2", "T3"), include.lowest = TRUE),
   Componente_2 = cut(pca_ind$PC2, breaks = terciles_componente_2, labels = c("T1", "T2", "T3"), include.lowest = TRUE),
   Componente_3 = cut(pca_ind$PC3, breaks = terciles_componente_3, labels = c("T1", "T2", "T3"), include.lowest = TRUE),
@@ -146,20 +147,19 @@ pca_terciles <- data.frame(
 pca_terciles
 ```
 
-```{r}
-# Creo primero una tabla que combina solo los datos que necesito, osea genes y tercil (e id)
-# La convierto a long para poder aplicar luego strata
+Para proceder con el análisis, requeriremos una tabla que resuma tanto la expresión génica por paciente como a qué tercil pertenecen. Se observa a continuación el código para crear dicha tabla, así como un resumen de las columnas presentes en esta:
 
+```{r}
 Dataset_expresión_genes <- Dataset_expresión_genes %>%
-  mutate(row = row_number())
+  mutate(row = row_number()) # Tal como en el código anterior, creamos una columna row para unir esta tabla con la anterior (ya que id no coincide con el número de fila)
 
 expgenica_terciles <- Dataset_expresión_genes %>%
-  select(row, starts_with("AQ_")) %>%
+  select(row, starts_with("AQ_")) %>% # Seleccionamos las columnas de expresión génica
   mutate(row = as.numeric(row)) %>%
-  left_join(pca_terciles %>% mutate(row = as.numeric(row)), by = "row")
+  left_join(pca_terciles %>% mutate(row = as.numeric(row)), by = "row") # Nos aseguramos de que "row" esté en el mismo formato en ambas tablas y las unimos por dicha columna
 
 colnames(expgenica_terciles)
- ```
+```
 
 ```{r genes}
 genes <- names(Dataset_expresión_genes)[startsWith(names(Dataset_expresión_genes), "AQ")]
