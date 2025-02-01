@@ -429,7 +429,7 @@ resultado_logistica_sintomas
 
 ```{r}
 variables_incluidas <- c('metastasis', 'Componente_1', 'Componente_2', 'Componente_3', 'Componente_4', 
-                         'Componente_5', 'dolor_abdo', 'disnea', 'sexo', 'exfumador')
+                         'Componente_5', 'dolor_abdo', 'disnea')
 
 modelo_logistica_resumen <- glm(metastasis ~ ., 
                                  data = dataset_expresión_terciles %>% select(all_of(variables_incluidas)), 
@@ -439,7 +439,24 @@ resultado_logistica_resumen <- tidy(modelo_logistica_resumen, exponentiate = TRU
 
 resultado_logistica_resumen <- resultado_logistica_resumen %>%
   filter(term != "(Intercept)") %>%
-  mutate(term = factor(term, levels = rev(term))) # Ordenar en el gráfico
+  mutate(term = as.character(term)) %>%
+  mutate(term = case_when(
+    term == "Componente_1T2" ~ "Componente 1 - T2",
+    term == "Componente_1T3" ~ "Componente 1 - T3",
+    term == "Componente_2T2" ~ "Componente 2 - T2",
+    term == "Componente_2T3" ~ "Componente 2 - T3",
+    term == "Componente_3T2" ~ "Componente 3 - T2",
+    term == "Componente_3T3" ~ "Componente 3 - T3",
+    term == "Componente_4T2" ~ "Componente 4 - T2",
+    term == "Componente_4T3" ~ "Componente 4 - T3",
+    term == "Componente_5T2" ~ "Componente 5 - T2",
+    term == "Componente_5T3" ~ "Componente 5 - T3",
+    term == "dolor_abdosi" ~ "Dolor abdominal",
+    term == "disneasi" ~ "Disnea",
+    TRUE ~ term  # Mantener los valores no modificados
+  )) %>%
+  mutate(term = factor(term, levels = rev(unique(term))))  # Volver a factor con los nuevos nombres
+
 
 # Crear Dot Plot con intervalos de confianza
 grafico <- ggplot(resultado_logistica_resumen, aes(x = estimate, y = term)) +
@@ -448,7 +465,7 @@ grafico <- ggplot(resultado_logistica_resumen, aes(x = estimate, y = term)) +
   geom_vline(xintercept = 1, linetype = "dashed", color = "red") +  # Línea de referencia en OR = 1
   labs(title = "Regresión logística: OR e Intervalos de confianza",
        x = "Odds Ratio (OR)",
-       y = "Componentes principales",
+       y = "Variable",
        caption = "Línea roja discontinua representa OR = 1") +
   theme_minimal()
 
