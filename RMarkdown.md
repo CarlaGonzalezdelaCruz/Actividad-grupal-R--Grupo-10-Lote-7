@@ -174,7 +174,7 @@ Teniendo en cuenta los valores de los scores y la contribución de cada gen a ca
 * Componente 5: Inflamación y Diferenciación Inmune
 
 
-Gráfico de correlación de los pacientes en klústers
+Gráfico de correlación de los pacientes en clústers en función de su expresión génica.
 ```{r}
 kmeans <- kmeans(datos_expresiongenica, centers = 3)
 grupo <- as.factor(kmeans$cluster)
@@ -185,8 +185,7 @@ fviz_pca_ind(pca,
              addEllipses = TRUE,
              legend.title = "Cluster")
 ```
-
-
+En función de los dos primeros componentes principales que representan la inflamación sistemática y señalización celular, y la regulación inmune y estrés oxidativo, se han agrupado los pacientes en 3 clústers en base a sus perfiles de expresión génica. El análisis de K-means ha identificado las 3 arupaciones del gráfico, lo que sugiere que existen patrones comunes entre los pacientes de cada clúster.
 
 ## Expresión génica en función de las cargas de los pacientes
 
@@ -369,10 +368,9 @@ resumen_CP2 <- expgenica_CP2 %>%
 
 resumen_CP2
 ```
-#### analisis tabla resumen_CP2
 
 A continuación, pueden observarse el código y las tablas correspondientes al análisis de los componentes 3, 4 y 5:
-
+#### analisis tabla resumen_CP2
 
 ```{r}
 expgenica_CP3 <- select(expgenica_terciles, starts_with("AQ_"), Componente_3)
