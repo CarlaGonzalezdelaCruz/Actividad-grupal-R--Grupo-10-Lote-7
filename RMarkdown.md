@@ -365,6 +365,8 @@ tabla_combinada <- tbl_merge(
   ) %>%
   modify_caption("**Expresión génica por componente y tercil**")%>% 
   modify_header(label ~ "**Gen**")
+
+tabla_combinada
 ```
 
 ## Implementar un modelo de regresión logística
