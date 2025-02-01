@@ -105,7 +105,66 @@ cargas_seleccionadas
 ```
 
 ## Gráficos descriptivos de los componentes principales
+Gráfico de correlación de las variables
+```{r}
+# Gráfico de correlación de las varibles en las dimensiones 1-2
+fviz_pca_var(pca, 
+             col.var = "cos2",  
+             gradient.col = c("blue", "yellow", "red"), 
+             repel = FALSE)
 
+# Representación de las 10 variables (genes) con más contribución
+fviz_pca_var(pca,
+             col.var="black"
+             select.var =list(contrib =10))
+```
+Gráfico de correlación de las variables en 3 dimensiones(1-2-3)
+```{r}
+# Extraer las coordenadas de los genes (variables) en los 3 primeros componentes principales
+pca_genes <- as.data.frame(pca$rotation[, 1:3])
+colnames(pca_genes) <- c("PC1", "PC2", "PC3")
+
+# Extraemos los nombres de los genes (filas de la matriz de rotación)
+genes <- rownames(pca_genes)
+
+# Generamos el gráfico 3D
+grafico3d <- plot_ly(pca_genes, 
+               x = ~PC1, y = ~PC2, z = ~PC3, 
+               type = 'scatter3d', 
+               mode = 'markers+text',  # Usamos markers+text para mostrar texto
+               text = genes,  # Agregar los nombres de los genes como texto
+               marker = list(size = 5, color = ~PC1, colorscale = 'blues', opacity = 0.7),
+               textposition = 'top center')  # Puedes cambiar la posición del texto si es necesario
+
+grafico3d <- grafico3d %>% layout(title = "Distribución de Genes en PCA (3D)",
+                      scene = list(xaxis = list(title = "Componente 1"),
+                                   yaxis = list(title = "Componente 2"),
+                                   zaxis = list(title = "Componente 3")))
+grafico3d
+```
+
+Variables con mayor contribución en las dimensiones
+```{r}
+fviz_contrib(pca, choice = "var", axes = 1:5, top = 15) # controbución en todas las dimensiones
+fviz_contrib(pca, choice = "var", axes = 1:2, top = 15) # controbución en las dimensiones 1-2
+fviz_contrib(pca, choice = "var", axes = 1, top = 15) # controbución en la dimensión 1
+fviz_contrib(pca, choice = "var", axes = 2, top =15) # controbución en la dimensión 1
+fviz_contrib(pca, choice = "var", axes = 3, top = 15) # controbución en la dimensión 1
+fviz_contrib(pca, choice = "var", axes = 4, top =15) # controbución en la dimensión 1
+fviz_contrib(pca, choice = "var", axes = 5, top = 15) # controbución en la dimensión 1
+```
+
+Gráfico de correlación de los pacientes en klústers
+```{r}
+kmeans <- kmeans(datos_expresiongenica, centers = 3)
+grupo <- as.factor(kmeans$cluster)
+
+fviz_pca_ind(pca,
+             col.ind = grupo,     
+             palette = c("lightgreen", "lightcoral", "skyblue"),
+             addEllipses = TRUE,
+             legend.title = "Cluster")
+```
 
 #### Esto va despues de los graficos:
 Teniendo en cuenta los valores de los scores y la contribución de cada gen a cada dimensión, así como la función de dichos genes, decidimos nombrar a los componentes de la siguiente manera:
