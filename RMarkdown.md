@@ -106,7 +106,7 @@ cargas_seleccionadas
 ```
 
 ## Gráficos descriptivos de los componentes principales
-Gráfico de correlación de las variables
+Realizamos un gráfico de correlación de las variables en las dos primeras dimensiones.
 ```{r}
 # Gráfico de correlación de las varibles en las dimensiones 1-2
 fviz_pca_var(pca, 
@@ -123,6 +123,7 @@ fviz_pca_var(pca,
              select.var =list(contrib =10),
              repel = TRUE)
 ```
+En el gráfico de correlación se puede observar la distribución de las variables en las dos primeras dimensiones del PCA. Las variables en rojo presentan una alta contribución a los dos primeros componentes, lo que indica que estas variables están fuertemente representadas por las dimensiones. Por otro lado, las variables en azul tienen una menor contribución, sugiriendo que su influencia en los componentes es más débil. Es importante destacar que en el primer componente todas las variables presentan una relación positiva, indicando que están alineadas de forma similar al componente. En cambio, el segundo componente presenta una relación más compleja con las variables con mayor dispersión y diversidad. Los genes presentan asociaciones tanto positivas como negativas al segundo componente.
 
 Gráfico de correlación de las variables en 3 dimensiones(1-2-3)
 ```{r}
@@ -148,6 +149,7 @@ grafico3d <- grafico3d %>% layout(title = "Distribución de Genes en PCA (3D)",
                                    zaxis = list(title = "Componente 3")))
 grafico3d
 ```
+La distribución de las variables en los tres primeros componentes principales muestra un grupo de genes que se agrupan en el centro del gráfico, indicando una similitud en su contribución a los componentes. No obstante, también se diferencian variables más alejadas como AQ_SLC2A4, que presentan un comportamiento diferente a su contribución a los componentes respecto a los demás genes. Al igual que en el gráfico anterior, el primer componente mantiene una contribución positiva para todas las variables. En cambio, el segundo y tercer componente muestran una mayor variabilidad y dispersión con asociaciones tanto positivas como negativas entre los genes.
 
 Variables con mayor contribución en las dimensiones
 ```{r}
@@ -159,6 +161,18 @@ fviz_contrib(pca, choice = "var", axes = 3, top = 15) # controbución en la dime
 fviz_contrib(pca, choice = "var", axes = 4, top =15) # controbución en la dimensión 1
 fviz_contrib(pca, choice = "var", axes = 5, top = 15) # controbución en la dimensión 1
 ```
+Teniendo en cuenta los valores de los scores y la contribución de cada gen a cada dimensión, así como la función de dichos genes, decidimos nombrar a los componentes de la siguiente manera:
+
+* Componente 1: Inflamación Sistémica y Señalización Celular
+
+* Componente 2: Regulación Inmune y Estrés Oxidativo
+
+* Componente 3: Metabolismo Celular y Resistencia al Estrés
+
+* Componente 4: Homeostasis Metabólica y Respuesta Antioxidante
+
+* Componente 5: Inflamación y Diferenciación Inmune
+
 
 Gráfico de correlación de los pacientes en klústers
 ```{r}
@@ -172,18 +186,7 @@ fviz_pca_ind(pca,
              legend.title = "Cluster")
 ```
 
-#### Esto va despues de los graficos:
-Teniendo en cuenta los valores de los scores y la contribución de cada gen a cada dimensión, así como la función de dichos genes, decidimos nombrar a los componentes de la siguiente manera:
 
-* Componente 1: Inflamación Sistémica y Señalización Celular
-
-* Componente 2: Regulación Inmune y Estrés Oxidativo
-
-* Componente 3: Metabolismo Celular y Resistencia al Estrés
-
-* Componente 4: Homeostasis Metabólica y Respuesta Antioxidante
-
-* Componente 5: Inflamación y Diferenciación Inmune
 
 ## Expresión génica en función de las cargas de los pacientes
 
