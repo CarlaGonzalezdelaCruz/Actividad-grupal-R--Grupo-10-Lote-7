@@ -156,6 +156,10 @@ expgenica_terciles <- Dataset_expresión_genes %>%
 ```
 
 ```{r}
+genes <- names(Dataset_expresión_genes)[startsWith(names(Dataset_expresión_genes), "AQ")]
+```
+
+```{r}
 expgenica_CP1 <- select(expgenica_terciles, starts_with("AQ_"), Componente_1)
 
 levene_CP1 <- data.frame(
@@ -345,8 +349,6 @@ unique(Dataset_expresión_genes$extension)
 ```
 
 ```{r}
-unique(Dataset_expresión_genes$extension)
-
 dataset_expresión_terciles <- Dataset_expresión_genes %>% #creo un nuevo dataframe con toda la info que puedo llegar a necestiar
   mutate(row = as.numeric(row)) %>%
   left_join(pca_terciles %>% mutate(row = as.numeric(row)), by = "row") %>% #Uno la df original con los terciles
