@@ -152,8 +152,11 @@ Dataset_expresión_genes <- Dataset_expresión_genes %>%
 
 expgenica_terciles <- Dataset_expresión_genes %>%
   select(row, starts_with("AQ_")) %>%
-  left_join(pca_terciles, by = "row") 
-```
+  mutate(row = as.numeric(row)) %>%
+  left_join(pca_terciles %>% mutate(row = as.numeric(row)), by = "row")
+
+colnames(expgenica_terciles)
+ ```
 
 ```{r}
 genes <- names(Dataset_expresión_genes)[startsWith(names(Dataset_expresión_genes), "AQ")]
