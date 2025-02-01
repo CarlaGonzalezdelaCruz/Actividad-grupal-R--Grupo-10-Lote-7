@@ -110,15 +110,20 @@ Gráfico de correlación de las variables
 ```{r}
 # Gráfico de correlación de las varibles en las dimensiones 1-2
 fviz_pca_var(pca, 
+             geom = "point",  # Usamos puntos (círculos)
              col.var = "cos2",  
-             gradient.col = c("blue", "yellow", "red"), 
-             repel = FALSE)
+             gradient.col = c("blue", "yellow", "red"),  
+             pointsize = 5,  
+             scale = "contrib",  
+             repel = TRUE)
 
 # Representación de las 10 variables (genes) con más contribución
 fviz_pca_var(pca,
-             col.var="black"
-             select.var =list(contrib =10))
+             col.var="black",
+             select.var =list(contrib =10),
+             repel = TRUE)
 ```
+
 Gráfico de correlación de las variables en 3 dimensiones(1-2-3)
 ```{r}
 # Extraer las coordenadas de los genes (variables) en los 3 primeros componentes principales
