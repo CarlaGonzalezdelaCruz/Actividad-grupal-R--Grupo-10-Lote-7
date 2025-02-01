@@ -36,24 +36,27 @@ Antes de comenzar con el análisis, confirmamos la ausencia de valores "NA" en e
 any(is.na(Dataset_expresión_genes))
 ```
 
-#### explicación del paciente eliminado
+Al realizar un paneo de los datos, observamos que el paciente con id 14 presenta valores anómalos en la expresión génica: para los genes AQ_ADIPOQ y AQ_NOX5 presenta una expresión anormalmente alta de 1, mientras que en el resto de los genes la expresión es 0. Consideramos que se trata de un error o datos faltantes, y eliminamos al paciente del análisis. 
 
 ```{r}
 Dataset_expresión_genes <- Dataset_expresión_genes %>%  filter(id != 14)
 ```
 
-
 ## Análisis de Componentes Principales (PCA)
+
+Para poder proceder con el análisis de componentes principales, creamos primero un dataframe que incluya solo los datos a analizar: aquellos de expresión génica.
 
 ```{r expresión génica} 
 datos_expresiongenica <- Dataset_expresión_genes %>%
   select(starts_with("AQ_"))
 ```
 
+Ya que estaremos realizando análisis estadísticos de los datos de expresión génica, es importante determinar si su distribución es normal o no. para esto, utilizamos el test de Shapiro.
 
 ```{r shapiro} 
 resultados_saphiro <- apply(datos_expresiongenica, 2, function(x) shapiro.test(x)$p.value)
 resultados_saphiro
+
 #creo una tabla con los datos de normalidad
 tabla_resultados <- data.frame(
   Variantes = colnames(datos_expresiongenica),
@@ -64,10 +67,15 @@ tabla_resultados <- data.frame(
 tabla_resultados
 ```
 
+Como puede observarse en la tabla, el p-valor para todas las expresiones génicas es menor a 0.05, por lo que se concluye que ningún gen mostró distribución normal según el test de Shapiro. Por lo tanto, los siguientes análisis se basarán en medidas no paramétricas, utilizando la mediana y el rango intercuartílico como estadísticos descriptivos.
+
+Finalmente, aplicamos la función pca() para generar componentes a partir de las variables originales (la expresión de 46 genes). Se observa a continuación un resumen de la data generada: 
+
 ```{r pca} 
 pca<- prcomp(datos_expresiongenica, scale=TRUE)
 summary(pca)
 ```
+Para determinar el número de componentes a seleccionar, calculamos y analizamos los eigenvalues y la varianza explicada acumulativa.
 
 ```{r eigenvalues}
 eigenvalues <- get_eigenvalue(pca)
@@ -76,46 +84,41 @@ eigenvalues_formatted[] <- lapply(eigenvalues_formatted, function(x) sprintf("%.
 print(eigenvalues_formatted) 
 ```
 
-#### elegimos 5 componentes
+Decidimos proceder con las primeras 5 dimensiones, ya que en su conjunto explican el 70% de la varianza de los datos.
+
+A continuación, pueden observarse los scores o cargas de cada gen y componente:
 
 ```{r} 
-##Tabla PCA cargas
-# Obtener las cargas de las variables en los componentes principales
-cargas <- pca$rotation  # Las cargas están en la matriz 'rotation'
+cargas <- pca$rotation # Obtener las cargas de las variables en los componentes principales
 
-# Seleccionar solo los primeros n componentes (en este caso, 5 componentes)
-cargas_seleccionadas <- as.data.frame(cargas[, 1:5])
+cargas_seleccionadas <- as.data.frame(cargas[, 1:5]) # Seleccionar solo los primeros 5 componentes
 
-# Añadir los nombres de las variables como una columna
-cargas_seleccionadas <- tibble::rownames_to_column(cargas_seleccionadas, var = "Variable")
+cargas_seleccionadas <- tibble::rownames_to_column(cargas_seleccionadas, var = "Variable") # Añadir los nombres de las variables como una columna
 
-# Renombrar las columnas para mayor claridad
 colnames(cargas_seleccionadas) <- c("Variable", "Componente 1", "Componente 2", 
                                     "Componente 3", "Componente 4", "Componente 5")
 
-# Formatear las cargas con 3 decimales
 cargas_seleccionadas <- cargas_seleccionadas %>%
   mutate(across(-Variable, ~ sprintf("%.3f", .)))
 
-# Mostrar la tabla
 cargas_seleccionadas
 ```
 
 ## Gráficos descriptivos de los componentes principales
 
 
-#### Tenendo en cuenta los graficos de barra y las funciones de los genes vamos nombrando a los componentes:
+#### Esto va despues de los graficos:
+Teniendo en cuenta los valores de los scores y la contribución de cada gen a cada dimensión, así como la función de dichos genes, decidimos nombrar a los componentes de la siguiente manera:
 
-Componente 1:Inflamación Sistémica y Señalización Celular
+* Componente 1: Inflamación Sistémica y Señalización Celular
 
-Componente 2: Regulación Inmune y Estrés Oxidativo
+* Componente 2: Regulación Inmune y Estrés Oxidativo
 
-Componente 3: Metabolismo Celular y Resistencia al Estrés
+* Componente 3: Metabolismo Celular y Resistencia al Estrés
 
-Componente 4: Homeostasis Metabólica y Respuesta Antioxidante
+* Componente 4: Homeostasis Metabólica y Respuesta Antioxidante
 
-Componente 5: Inflamación y Diferenciación Inmune
-
+* Componente 5: Inflamación y Diferenciación Inmune
 
 ## Expresión génica en función de las cargas de los pacientes
 
