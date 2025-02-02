@@ -151,16 +151,25 @@ grafico3d
 ```
 La distribución de las variables en los tres primeros componentes principales muestra un grupo de genes que se agrupan en el centro del gráfico, indicando una similitud en su contribución a los componentes. No obstante, también se diferencian variables más alejadas como AQ_SLC2A4, que presentan un comportamiento diferente a su contribución a los componentes respecto a los demás genes. Al igual que en el gráfico anterior, el primer componente mantiene una contribución positiva para todas las variables. En cambio, el segundo y tercer componente muestran una mayor variabilidad y dispersión con asociaciones tanto positivas como negativas entre los genes.
 
-Variables con mayor contribución en las dimensiones
+Variables con mayor contribución en las dimensiones. Se ha analizado tanto las dimensiones por separado como la combinación de estas con la dimensión 1, que es la que contribuye más (52'49%). 
 ```{r}
-fviz_contrib(pca, choice = "var", axes = 1:5, top = 15) # controbución en todas las dimensiones
-fviz_contrib(pca, choice = "var", axes = 1:2, top = 15) # controbución en las dimensiones 1-2
-fviz_contrib(pca, choice = "var", axes = 1, top = 15) # controbución en la dimensión 1
-fviz_contrib(pca, choice = "var", axes = 2, top =15) # controbución en la dimensión 1
-fviz_contrib(pca, choice = "var", axes = 3, top = 15) # controbución en la dimensión 1
-fviz_contrib(pca, choice = "var", axes = 4, top =15) # controbución en la dimensión 1
-fviz_contrib(pca, choice = "var", axes = 5, top = 15) # controbución en la dimensión 1
+fviz_contrib(pca, choice = "var", axes = 1, top = 50)
+fviz_contrib(pca, choice = "var", axes = 2, top = 50)
+fviz_contrib(pca, choice = "var", axes = 3, top = 50)
+fviz_contrib(pca, choice = "var", axes = 4, top = 50)
+fviz_contrib(pca, choice = "var", axes = 5, top = 50)
 ```
+#
+
+```{r}
+fviz_contrib(pca, choice = "var", axes = c(1, 2), top = 50)
+fviz_contrib(pca, choice = "var", axes = c(1, 3), top = 50)
+fviz_contrib(pca, choice = "var", axes = c(1, 4), top = 50)
+fviz_contrib(pca, choice = "var", axes = c(1, 5), top = 50)
+```
+#
+
+
 Teniendo en cuenta los valores de los scores y la contribución de cada gen a cada dimensión, así como la función de dichos genes, decidimos nombrar a los componentes de la siguiente manera:
 
 * Componente 1: Inflamación Sistémica y Señalización Celular
