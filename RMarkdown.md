@@ -633,3 +633,29 @@ Como se adelantó, el p valor e IC del OR superior a 1 para las variables disnea
 De forma similar, hay un aumento estadisticamente significativo de que un paciente con dolor abdominal presente metástasis. Aunque el OR indica que este aumento es de más de 1700 veces, este valor vuelve a ser cuestionable teniendo en cuenta el IC.
 
 ## Conclusión
+A través del presente análisis génico de 65(?) pacientes junto con las expresiones de sus 46 genes respectivos se han obtenido las siguientes conclusiones:
+
+Para analizar la variabilidad de datos se realizó un PCA. El objetivo principal es reducir la complejidad de un conjunto de variables observadas e identificar los componentes principales que explican la mayor parte de la variabilidad en los datos originales, es decir, la varianza total es igual a la varianza común. Al realizarlo, se encontró que más del 70 % de esta se explicaba mediante las 5 primeras dimensiones. 
+
+Por un lado, se analizó estas 5 dimensiones en base a nuestras variables, es decir, los genes (?). Se pudo observar que, el primer componente, relacionado con la inflamación sistémica y señalización celular, evidenció diferencias significativas en las expresiónes génicas en la mayor parte de los genes, lo que es relevante a la hora de clasificar los pacientes. Por otro lado, el resto de componentes mostraron, que explican aproximadamente un 19'50% de la variabilidad, aun asi muestran patrones diferenciados, especialmente el componente 5 que esta relacionado con la inflamación y la diferenciación Immune.
+
+Por otro lado, se analizó los pacientes en relación a estas 5 dimensiones:
+Se identificaron tres clústeres de pacientes con perfiles de expresión génica diferenciados:
+El primer clúster estaba asociado a una mayor expresión de genes relacionados con la regulación inmune y el estrés oxidativo.
+El segundo clúster, es un grupo intermedio con genes involucrados en la inflamación y regulación inmune.
+Por último, el tercer clúster presentaba una menor activación de procesos inflamatorios y de señalización celular.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
