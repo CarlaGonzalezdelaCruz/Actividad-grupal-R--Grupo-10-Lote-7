@@ -201,9 +201,9 @@ fviz_pca_ind(pca,
              legend.title = "Cluster")
 ```
 En función de los dos primeros componentes principales que representan la inflamación sistemática y señalización celular, y la regulación inmune y estrés oxidativo, se han agrupado los pacientes en 3 clústers en base a sus perfiles de expresión génica. El análisis de K-means ha identificado las 3 arupaciones del gráfico:
-Clúster 1 (verde, círculos): Representa pacientes con un perfil genético caracterizado por una mayor expresión de genes relacionados con la regulación inmune y el estrés oxidativo, esto queda reflejado por el desplazamiento que se oberva hacia valores positivos en la dimensión 1. Por otro lado, presenta una mayor dispersión lo que puede indicar una mayor heterogeneidad en sus perfiles de expresión génica.
-Clúster 2 (rojo, triángulos): Representa a un grupo intermedio de pacientes que combina genes relacionados con la inflamación y la regulación inmune. Los individuos de este grupo se superponen en parte con los otros clústeres, indicando una posible transición entre los perfiles genéticos.
-Clúster 3 (azul, cuadrados): Representa pacientes con menor activación de procesos inflamatorios y de señalización celular, localizados en la zona negativa de la dimensión 1 y más concentrados en el gráfico en comparación con los dos clústeres anteriores.
+#Clúster 1 (verde, círculos): Representa pacientes con un perfil genético caracterizado por una mayor expresión de genes relacionados con la regulación inmune y el estrés oxidativo, esto queda reflejado por el desplazamiento que se oberva hacia valores positivos en la dimensión 1. Por otro lado, presenta una mayor dispersión lo que puede indicar una mayor heterogeneidad en sus perfiles de expresión génica.
+#Clúster 2 (rojo, triángulos): Representa a un grupo intermedio de pacientes que combina genes relacionados con la inflamación y la regulación inmune. Los individuos de este grupo se superponen en parte con los otros clústeres, indicando una posible transición entre los perfiles genéticos.
+#Clúster 3 (azul, cuadrados): Representa pacientes con menor activación de procesos inflamatorios y de señalización celular, localizados en la zona negativa de la dimensión 1 y más concentrados en el gráfico en comparación con los dos clústeres anteriores.
 
 ## Expresión génica en función de las cargas de los pacientes
 
