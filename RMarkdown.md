@@ -400,7 +400,7 @@ resumen_CP3 <- expgenica_CP3 %>%
 
 resumen_CP3
 ```
-#### analisis tabla resumen_CP3
+En referencia al componente 3 (Metabolismo Celular y Resistencia al Estrés), de los 46 genes analizados, únicamente 16 de ellos presenta un valor de p-value >0.05, lo que implica la aceptación de la hipótesis nula. En otras palabras, la mayoría de las medias de expresión génica muestran diferencias estadísticamente significativas entre algunos de los terciles.
 
 ```{r}
 expgenica_CP4 <- select(expgenica_terciles, starts_with("AQ_"), Componente_4)
