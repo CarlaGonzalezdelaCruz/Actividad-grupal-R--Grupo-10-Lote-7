@@ -357,7 +357,7 @@ resumen_CP2 <- expgenica_CP2 %>%
 
 resumen_CP2
 ```
-Como se puede obsevar en el resumen del Componente 2, se ha encontrado significancia en los genes AQ_ALOX5, AQ_ARG1, AQ_CCL2, AQ_CCL5, AQ_CCR5, AQ_CD36, AQ_CHKA, AQ_CPT1A, AQ_CSF2, AQ_CXCR1, AQ_FASN, AQ_FOXP3, AQ_G6PD, AQ_GPD2, AQ_IFNG, AQ_IL10, AQ_IL1B, AQ_JAK1, AQ_JAK3, AQ_LDHA, AQ_LIF, AQ_MAPK1, AQ_NFE2L2, AQ_NFKB1, AQ_NLRP3, AQ_NOX5, AQ_PDCD1, AQ_PTAFR, AQ_PTGS2, AQ_SLC2A4, AQ_SOD1, AQ_SREBF1, AQ_STAT3, AQ_TLR3, AQ_TLR4 Y AQ_TNF al tener estos un p-value inferior a 0'05. Esto indica una relación entre estos genes y este componente.  
+Como se puede obsevar en el resumen del Componente 2 (Regulación Inmune y Estrés Oxidativo), se ha encontrado significancia en 36 de 46 genes entre ellos AQ_ALOX5, AQ_ARG1, AQ_CCL2, AQ_CCL5 y AQ_CCR5. Al tener estos un p-value inferior a 0'05, aceptaríamos la hipotesis nula que indica que existen diferencias entre las expresiónes génicas entre los terciles del componente.
 
 
 A continuación, pueden observarse el código y las tablas correspondientes al análisis de los componentes 3, 4 y 5:
