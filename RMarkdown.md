@@ -13,10 +13,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introducción
 
+Se analiza a continuación un dataset que contiene información de la expresión de 46 genes en 65 pacientes, cada uno con distintos tipos de tratamiento y características tumorales. Se pretende utilizar el lenguaje de programación R para realizar un PCA, gráficos y tablas descriptivas de sus resultados, y los modelos predictivos de regresión logística.
+
 En primer lugar, importamos el dataset e instalamos y cargamos los paquetes apropiados:
 * tidyverse para asistir en el análisis de los datos
 * factoextra para el análisis de componentes principales
 * gtsummary, gt y broom para la creacion de tablas
+* plotly para la creación de graficos tridimensional 
 * car para realizar el test de homogeneidad de varianzes de Levene
 
 ```{r, include=FALSE}
@@ -38,7 +41,7 @@ Antes de comenzar con el análisis, confirmamos la ausencia de valores "NA" en e
 any(is.na(Dataset_expresión_genes))
 ```
 
-Al realizar un paneo de los datos, observamos que el paciente con id 14 presenta valores anómalos en la expresión génica: para los genes AQ_ADIPOQ y AQ_NOX5 presenta una expresión anormalmente alta de 1, mientras que en el resto de los genes la expresión es 0. Consideramos que se trata de un error o datos faltantes, y eliminamos al paciente del análisis. 
+Al realizar un paneo de los datos, observamos que el paciente con id 14 presenta valores anómalos en la expresión génica: para los genes AQ_ADIPOQ y AQ_NOX5 presenta una expresión sumamente alta de 1, mientras que en el resto de los genes la expresión es 0. Consideramos que se trata de un error o datos faltantes, y eliminamos al paciente del análisis. 
 
 ```{r}
 Dataset_expresión_genes <- Dataset_expresión_genes %>%  filter(id != 14)
@@ -53,7 +56,7 @@ datos_expresiongenica <- Dataset_expresión_genes %>%
   select(starts_with("AQ_"))
 ```
 
-Ya que estaremos realizando análisis estadísticos de los datos de expresión génica, es importante determinar si su distribución es normal o no. para esto, utilizamos el test de Shapiro.
+Ya que estaremos realizando análisis estadísticos de los datos de expresión génica, es importante determinar si su distribución es normal o no. Para esto, utilizamos el test de Shapiro.
 
 ```{r shapiro} 
 resultados_saphiro <- apply(datos_expresiongenica, 2, function(x) shapiro.test(x)$p.value)
@@ -61,7 +64,6 @@ resultados_saphiro
 
 #creo una tabla con los datos de normalidad
 tabla_resultados <- data.frame(
-  Variantes = colnames(datos_expresiongenica),
   p_valor = format(resultados_saphiro, digits = 3, scientific = TRUE), 
   Test = rep("Shapiro-Wilk", length(resultados_saphiro)), 
   Interpretacion = ifelse(resultados_saphiro < 0.05, "No normal", "Normal")
@@ -86,7 +88,7 @@ eigenvalues_formatted[] <- lapply(eigenvalues_formatted, function(x) sprintf("%.
 print(eigenvalues_formatted) 
 ```
 
-Decidimos proceder con las primeras 5 dimensiones, ya que en su conjunto explican el 70% de la varianza de los datos.
+Decidimos proceder con las primeras 5 dimensiones, ya que en su conjunto explican más del 70% de la varianza de los datos.
 
 A continuación, pueden observarse los scores o cargas de cada gen y componente:
 
@@ -112,7 +114,9 @@ cargas_seleccionadas
 ```
 
 ## Gráficos descriptivos de los componentes principales
+
 Realizamos un gráfico de correlación de las variables en las dos primeras dimensiones.
+
 ```{r}
 # Gráfico de correlación de las varibles en las dimensiones 1-2
 fviz_pca_var(pca, 
@@ -122,16 +126,20 @@ fviz_pca_var(pca,
              pointsize = 5,  
              scale = "contrib",  
              repel = TRUE)
+```
 
+```{r}
 # Representación de las 10 variables (genes) con más contribución
 fviz_pca_var(pca,
              col.var="black",
              select.var =list(contrib =10),
              repel = TRUE)
 ```
-En el gráfico de correlación se puede observar la distribución de las variables en las dos primeras dimensiones del PCA. Las variables en rojo presentan una alta contribución a los dos primeros componentes, lo que indica que estas variables están fuertemente representadas por las dimensiones. Por otro lado, las variables en azul tienen una menor contribución, sugiriendo que su influencia en los componentes es más débil. Es importante destacar que en el primer componente todas las variables presentan una relación positiva, indicando que están alineadas de forma similar al componente. En cambio, el segundo componente presenta una relación más compleja con las variables con mayor dispersión y diversidad. Los genes presentan asociaciones tanto positivas como negativas al segundo componente.
 
-Gráfico de correlación de las variables en 3 dimensiones(1-2-3)
+En el gráfico de correlación se puede observar la distribución de las variables en las dos primeras dimensiones del PCA. Las variables en rojo presentan una alta contribución a los dos primeros componentes, lo que indica que estas variables están fuertemente representadas por las dimensiones 1 y 2. Por otro lado, las variables en azul tienen una menor contribución, sugiriendo que su influencia en los componentes es más débil. Es importante destacar que en el primer componente todas las variables presentan una relación positiva, indicando que están alineadas de forma similar al componente. Esto no sorprende, ya que la dimensión usa explica un 52% de la varianza, y todos los genes estudiados son oncogenes o están relacionados con la generación de tumores. Por otro lado, el segundo componente presenta una relación más compleja con las variables, con mayor dispersión y diversidad. Los genes presentan asociaciones tanto positivas como negativas al segundo componente.
+
+Se observa a continuación un gráfico de correlación de los componentes 1, 2 y 3 en 3 dimensiones :
+
 ```{r}
 # Extraer las coordenadas de los genes (variables) en los 3 primeros componentes principales
 pca_genes <- as.data.frame(pca$rotation[, 1:3])
@@ -157,29 +165,37 @@ grafico3d
 ```
 La distribución de las variables en los tres primeros componentes principales muestra un grupo de genes como AQ_JAK1, AQ_CCL5 y AQ_NFE2L2 que se agrupan en el centro del gráfico, indicando una similitud en su contribución a los componentes. No obstante, también se diferencian variables más alejadas como AQ_SLC2A4, AQ_ARG1 y AQ_FOXO3, que presentan un comportamiento diferente a su contribución a los componentes respecto a los demás genes. Al igual que en el gráfico anterior, el primer componente mantiene una contribución positiva para todas las variables. En cambio, el segundo y tercer componente muestran una mayor variabilidad y dispersión con asociaciones tanto positivas como negativas entre los genes.
 
-Variables con mayor contribución en las dimensiones. Se ha analizado tanto las dimensiones por separado como la combinación de estas con la dimensión 1, que es la que contribuye más (52'49%). 
+Estudiamos también las variables con mayor contribución en las dimensiones. Se han analizado tanto las dimensiones por separado como la combinación de estas con la dimensión 1, que es la que contribuye más (52%). 
+
 ```{r}
-fviz_contrib(pca, choice = "var", axes = 1, top = 50)
-fviz_contrib(pca, choice = "var", axes = 2, top = 50)
-fviz_contrib(pca, choice = "var", axes = 3, top = 50)
-fviz_contrib(pca, choice = "var", axes = 4, top = 50)
-fviz_contrib(pca, choice = "var", axes = 5, top = 50)
+fviz_contrib(pca, choice = "var", axes = 1, top = 15)
+fviz_contrib(pca, choice = "var", axes = 2, top = 10)
+fviz_contrib(pca, choice = "var", axes = 3, top = 10)
+fviz_contrib(pca, choice = "var", axes = 4, top = 10)
+fviz_contrib(pca, choice = "var", axes = 5, top = 10)
 ```
 En el análisis de la Dimensión 1, los genes más influyentes incluyen AQ_JAK1, AQ_CCL5, AQ_SREBF1 y AQ_NFE2L2.   
+
 En la Dimensión 2, las contribuciones están más dispersas, destacándose genes como AQ_ARG1, AQ_CCL1 y AQ_LIF, los cuales presentan valores superiores en comparación con los demás genes.  
+
 En la Dimensión 3, se identifican algunas variables con contribuciones elevadas como  son AQ_SLC2A4 y AQ_JAK3.  
+
 Por otro lado, la Dimensión 4 tienen una gran contribución AQ_NOX5, AQ_ADIPOQ y AQ_NOS2, superando el 30%.  
+
 Finalmente, en la Dimensión 5, los genes con mayor contribución son AQ_IL6, AQ_CSF1, AQ_NOS2, AQ_BMP2 y AQ_SLC2A4.
 
 ```{r}
-fviz_contrib(pca, choice = "var", axes = c(1, 2), top = 50)
-fviz_contrib(pca, choice = "var", axes = c(1, 3), top = 50)
-fviz_contrib(pca, choice = "var", axes = c(1, 4), top = 50)
-fviz_contrib(pca, choice = "var", axes = c(1, 5), top = 50)
+fviz_contrib(pca, choice = "var", axes = c(1, 2), top = 10)
+fviz_contrib(pca, choice = "var", axes = c(1, 3), top = 10)
+fviz_contrib(pca, choice = "var", axes = c(1, 4), top = 10)
+fviz_contrib(pca, choice = "var", axes = c(1, 5), top = 10)
 ```
 En la combinación de las Dimensiones 1 y 2, se observa una distribución más uniforme de las contribuciones, con valores más equilibrados en comparación con las gráficas por individual. Entre los genes con mayores contribuciones se encuentran AQ_JAK1, AQ_PTAR, AQ_SREBF1 y AQ_NFE2L2.  
+
 Al considerar las Dimensiones 1 y 3, se evidencia que algunos genes que eran dominantes en la Dimensión 3, como AQ_SLC2A4, AQ_JAK3 y AQ_FOXO3, ya no presentan un aporte tan marcado. En contraste, genes como AQ_JAK1, AQ_IL5 y AQ_TGFBI adquieren mayor importancia en esta gráfica.   
+
 En la combinación de las Dimensiones 1 y 4, la contribución se encuentra más dispersa y distribuida entre varios genes, con AQ_JAK1, AQ_CCL5, AQ_SREBF1 y AQ_NFE2L2 mostrando valores similares, en torno al 3%.  
+
 Finalmente, en la combinación con la Dimensión 5, los genes con mayor contribución son AQ_JAK1, AQ_CCL5, AQ_SREBF1, AQ_NFE2L2 y AQ_PTARF.
 
 Teniendo en cuenta los valores de los scores y la contribución de cada gen a cada dimensión, así como la función de dichos genes, decidimos nombrar a los componentes de la siguiente manera:
@@ -194,8 +210,8 @@ Teniendo en cuenta los valores de los scores y la contribución de cada gen a ca
 
 * Componente 5: Inflamación y Diferenciación Inmune
 
+Realizamos luego un gráfico de correlación de los pacientes en clústers en función de su expresión génica.
 
-Gráfico de correlación de los pacientes en clústers en función de su expresión génica.
 ```{r}
 kmeans <- kmeans(datos_expresiongenica, centers = 3)
 grupo <- as.factor(kmeans$cluster)
@@ -206,7 +222,7 @@ fviz_pca_ind(pca,
              addEllipses = TRUE,
              legend.title = "Cluster")
 ```
-En función de los dos primeros componentes principales que representan la inflamación sistemática y señalización celular, y la regulación inmune y estrés oxidativo, se han agrupado los pacientes en 3 clústers en base a sus perfiles de expresión génica. El análisis de K-means ha identificado las 3 arupaciones del gráfico:
+En función de los dos primeros componentes principales que representan la inflamación sistemática y señalización celular, y la regulación inmune y estrés oxidativo, se han agrupado los pacientes en 3 clústers en base a sus perfiles de expresión génica. Con el análisis de K-means ha identificado las 3 arupaciones del gráfico:
 
 Clúster 1 (verde, círculos): Representa pacientes con un perfil genético caracterizado por una mayor expresión de genes relacionados con la regulación inmune y el estrés oxidativo, esto queda reflejado por el desplazamiento que se oberva hacia valores positivos en la dimensión 1. Por otro lado, presenta una mayor dispersión lo que puede indicar una mayor heterogeneidad en sus perfiles de expresión génica.
 
@@ -216,7 +232,7 @@ Clúster 3 (azul, cuadrados): Representa pacientes con menor activación de proc
 
 ## Expresión génica en función de las cargas de los pacientes
 
-Para proceder con el análisis, determinaremos las estadísticas descriptivas de la expresión génica (mediana y rango intercuartílico, ya que su distribución no es normal) luego de dividir a los individuos en tres terciles según su score de CPA. Por ende, en primer lugar calculamos dichos terciles. Generamos una nueva tabla que indica a qué tercil pertenece cada paciente dentro de cada componente.
+Para proceder con el análisis, determinaremos las estadísticas descriptivas de la expresión génica (mediana y rango intercuartílico, ya que su distribución no es normal) luego de dividir a los individuos en tres terciles según su score de PCA. Por tanto, en primer lugar calculamos dichos terciles. Generamos una nueva tabla que indica a qué tercil pertenece cada paciente dentro de cada componente.
 
 ```{r} 
 pca_ind <- as.data.frame(pca$x) # Extraer los valores de los scores para los individuos
@@ -261,7 +277,7 @@ Cómo último paso antes de comenzar a generar las tablas que resuman los estad�
 genes <- names(Dataset_expresión_genes)[startsWith(names(Dataset_expresión_genes), "AQ")]
 ```
 
-Con el objetivo de poder aplicar todos los tests estadísticos pertinentes, realizamos tablas separadas para cada componente. Este resumen, para cada tercil, la mediana y el rango intercuartílico de la expresión de cada gen, así como el valor p que indica si la diferencia entre los cuartiles es significativa.
+Con el objetivo de poder aplicar todos los tests estadísticos pertinentes, realizamos tablas separadas para cada componente. Estas resumen, para cada tercil, la mediana y el rango intercuartílico de la expresión de cada gen, así como el valor p que indica si la diferencia entre los cuartiles es significativa.
 
 Respetando el orden de los componentes, analizamos primero la expresión génica en función de los scores individuales calculados para el componente 1 (Inflamación Sistémica y Señalización Celular). Utilizamos el test de Levene para determinar si, al agrupar a los pacientes por tercil, la expresión génica es paramétrica u homogénea entre los tres grupos. 
 
@@ -312,7 +328,7 @@ resumen_CP1 <- expgenica_CP1 %>%
 resumen_CP1
 ```
 
-Para la gran mayoría de los genes (exceptuando AQ_ADIPOQ, AQ_LIF, AQ_NOX5 y AQ_SLC2A4), se observan p-valores menores a 0.05. Estos indican que se rechaza la hipótesis nula, lo que sugiere que al menos un grupo de pacientes, clasificado según el tercil del score del PCA, tiene una mediana de expresión génica significativamente diferente a las otras. No es de sorprender que, para el componente 1—que explica la mayor varianza de los datos y está relacionado con la inflamación sistémica y señalización celular—se observe una diferencia estadísticamente significativa de la expresión de la gran mayoría de los genes según la magnitud del score del paciente.
+Para la gran mayoría de los genes (exceptuando AQ_ADIPOQ, AQ_LIF, AQ_NOX5 y AQ_SLC2A4), se observan p valores menores a 0.05. Estos indican que se rechaza la hipótesis nula, lo que sugiere que al menos un grupo de pacientes, clasificado según el tercil del score del PCA, tiene una mediana de expresión génica significativamente diferente a las otras. No es de sorprender que, para el componente 1—que explica la mayor varianza de los datos y está relacionado con la inflamación sistémica y señalización celular—se observe una diferencia estadísticamente significativa de la expresión de la gran mayoría de los genes según la magnitud del score del paciente.
 
 Procedemos de la misma manera con el segundo componente (Regulación Inmune y Estrés Oxidativo):
 
@@ -357,10 +373,11 @@ resumen_CP2 <- expgenica_CP2 %>%
 
 resumen_CP2
 ```
-Como se puede obsevar en el resumen del Componente 2 (Regulación Inmune y Estrés Oxidativo), se ha encontrado significancia en 36 de 46 genes entre ellos AQ_ALOX5, AQ_ARG1, AQ_CCL2, AQ_CCL5 y AQ_CCR5. Al tener estos un p-value inferior a 0'05, aceptaríamos la hipotesis nula que indica que existen diferencias entre las expresiónes génicas entre los terciles del componente.
 
+Como se puede obsevar en el resumen del componente 2 (Regulación Inmune y Estrés Oxidativo), se ha encontrado significancia en 36 de 46 genes, entre ellos AQ_ALOX5, AQ_ARG1, AQ_CCL2, AQ_CCL5 y AQ_CCR5. Al tener estos un p valor inferior a 0.05, aceptaríamos la hipotesis alternativa, que indica que existen diferencias entre las expresiónes génicas entre los terciles del componente.
 
 A continuación, pueden observarse el código y las tablas correspondientes al análisis de los componentes 3, 4 y 5:
+
 ```{r}
 expgenica_CP3 <- select(expgenica_terciles, starts_with("AQ_"), Componente_3)
 
@@ -400,7 +417,8 @@ resumen_CP3 <- expgenica_CP3 %>%
 
 resumen_CP3
 ```
-En referencia al componente 3 (Metabolismo Celular y Resistencia al Estrés), de los 46 genes analizados, únicamente 16 de ellos presenta un valor de p-value >0.05, lo que implica la aceptación de la hipótesis nula. En otras palabras, la mayoría de las medias de expresión génica muestran diferencias estadísticamente significativas entre algunos de los terciles.
+
+En referencia al componente 3 (Metabolismo Celular y Resistencia al Estrés), de los 46 genes analizados, únicamente 16 de ellos presenta un p valor mayor a 0.05, lo que implica la aceptación de la hipótesis nula. En otras palabras, la mayoría de las medias de expresión génica muestran diferencias estadísticamente significativas entre algunos de los terciles.
 
 ```{r}
 expgenica_CP4 <- select(expgenica_terciles, starts_with("AQ_"), Componente_4)
@@ -441,7 +459,8 @@ resumen_CP4 <- expgenica_CP4 %>%
 
 resumen_CP4
 ```
-Como se observa, la mayoría de los genes presentan un valor de p-value <0.05 aceptando la hipótesis alternativa, indicando la presencia de diferencias significativas entre los terciles de expresión génica.
+
+Como se observa, la mayoría de los genes presentan un p valor menor a 0.05, aceptando la hipótesis alternativa, indicando la presencia de diferencias significativas entre los terciles de expresión génica.
 
 ```{r}
 expgenica_CP5 <- select(expgenica_terciles, starts_with("AQ_"), Componente_5)
@@ -483,8 +502,8 @@ resumen_CP5 <- expgenica_CP5 %>%
 
 resumen_CP5
 ```
-En los terciles basados en el componente 5 (Inflamación y Diferenciación Inmune), a pesar de que este componente explica solo el 3.82% de la varianza total, la mayoría de genes presentan diferencias estadísticamente significativas. No obstante, cinco genes (AQ_ADIPOQ, AQ_IL10, AQ_LIF, AQ_NOX5 y AQ_TLR3) no muestran diferencias significativas, indicando que su expresión no varía de forma relevante en función de los terciles.
 
+En los terciles basados en el componente 5 (Inflamación y Diferenciación Inmune), a pesar de que este componente explica solo el 3.82% de la varianza total, la mayoría de genes presentan diferencias estadísticamente significativas. No obstante, cinco genes (AQ_ADIPOQ, AQ_IL10, AQ_LIF, AQ_NOX5 y AQ_TLR3) no muestran diferencias significativas, indicando que su expresión no varía de forma relevante en función de los terciles.
 
 Finalmente, el siguiente código reúne las 5 tablas en una única tabla que resume los estadísticos obtenidos:
 
@@ -502,7 +521,6 @@ tabla_combinada <- tbl_merge(
 
 tabla_combinada
 ```
-### Resumen de las tablas de los 5 componentes
 
 ## Implementar un modelo de regresión logística
 
@@ -523,7 +541,8 @@ dataset_expresión_terciles <- Dataset_expresión_genes %>% # Creación del un n
   mutate(metastasis = factor(if_else(extension == "metastasico", "sí", "no"))) %>% # Creación de la columna metastasis para ralizar la regresion logistica
   select(-c(1, 2, 57, 105)) # Eliminar las columnas innecesarias: ...1, id, row y extension (reemplazada por metastasis)
 ```
-Utilizamos este para aplicar el modelo de regresión logística, seleccionando la columna metastasis como variable dependiente, y a los componentes como variables independientes. Se observan a continuación los resultados del modelo:
+
+Utilizamos este dataframe para aplicar el modelo de regresión logística, seleccionando la columna "metastasis" como variable dependiente, y a los componentes como variables independientes. Se observan a continuación los resultados del modelo:
 
 ```{r}
 modelo_logistica_componentes <- glm(metastasis ~ Componente_1 + Componente_2 + Componente_3 + Componente_4 + Componente_5, 
@@ -562,10 +581,6 @@ gt_componentes <- resultado_logistica_componentes %>%
 gt_componentes
 ```
 
-Para cada componente observamos cual es la disminución (OR<1) o el aumento (OR>1) del riesgo de presentar metastasis según si el paciente pertenece al tercil 2 o 3, comparado con el 1. Sin embargo, este riesgo no es estadisticamente significativo. Esto se concluye tanto a partir de los valores p mayores o iguales a 0.05, como el hecho de que los intervalos de confianza (excepto el último) contienen al valor 1 de riesgo nulo.
-
-Sin embargo, dentro del componente 5 (Inflamación y Diferenciación Inmune) podemos afirmar que hay una clara tendencia para los pacientes dentro del tercil 3 a tener menos riesgo de presentar metástasis.
-
 Los hayazgos del modelo de regresión logística para los componentes se encuentran resumidos en el siguiete gráfico:
 
 ```{r}
@@ -592,9 +607,13 @@ grafico_OR <- ggplot(resultado_logistica_componentes_resumen, aes(x = estimate, 
 grafico_OR
 ```
 
-Repetimos esta análisis considerando como variables independientes a los parametro bioquímicos, las variables sociodemográficas, las comorbilidades de los pacientes, y los síntomas presentados. Para todas estas variables, exceptuando la presencia de dolor abdominal y disnea, los resultados obtenidos no fueron estadisticamente significativos.
+Para cada componente, observamos cuál es la disminución (OR<1) o el aumento (OR>1) del riesgo de presentar metastasis según si el paciente pertenece al tercil 2 o 3, comparado con el 1. Sin embargo, este riesgo no es estadisticamente significativo. Esto se concluye tanto a partir de los valores p mayores o iguales a 0.05, como el hecho de que los intervalos de confianza (excepto el último) contienen al valor 1. Este valor de OR representa el riesgo nulo, y es particularmente visible en el gráfico, donde se encuentra representado por la línea roja punteada.
 
-A continuación, se observa el código, tabla, y análisis de los sintomas. En primer lugar creamos un dataset que resuma la presencia o ausencia de metástasis, así como de los síntomas. Para evitar problemas de formato, convertimos los valores de los síntomas "no" y "si" en 0 y 1 respectivamente.
+Dentro del componente 5 (Inflamación y Diferenciación Inmune) podemos afirmar que hay una clara tendencia para los pacientes dentro del tercil 3 a tener menos riesgo de presentar metástasis.
+
+Repetimos el modelo de regresión logística considerando como variables independientes a los parametro bioquímicos, las variables sociodemográficas, las comorbilidades de los pacientes, y los síntomas presentados. Para todas estas variables, exceptuando la presencia de dolor abdominal y disnea, los resultados obtenidos no fueron estadisticamente significativos.
+
+A continuación, se observa el código, tabla, y análisis del OR calculado los sintomas. En primer lugar creamos un dataset que resuma la presencia o ausencia de metástasis, así como de los síntomas. Para evitar problemas de formato, convertimos los valores de los síntomas "no" y "si" en 0 y 1 respectivamente.
 
 ```{r}
 sintomas <- c('tos', 'disnea', 'expect', 'secrecion', 'dolor_garg', 'escalofrios', 'fiebre', 
@@ -628,35 +647,25 @@ gt_sintomas <- resultado_logistica_sintomas %>%
 gt_sintomas
 ```
 
-Como se adelantó, el p valor e IC del OR superior a 1 para las variables disnea y dolor abdominal sugieren un aumento de riesgo estadisticamente significativo. El OR de la variable disnea indica que en un paciente con disnea el riesgo de presentar metástasis sería unas 300 veces mayor. Sin embargo, el amplio IC hace cuestionable este valor. Dicho esto, sí puede afirmarse con confianza que el riesgo aumenta.
+Como se adelantó, las variables disnea y dolor abdominal presentan un p valor menor a 0.05 y un IC del OR superior a 1. Por lo tanto, existe un aumento de riesgo estadisticamente significativo. El OR de la variable disnea indica que el riesgo de presentar metástasis sería unas 300 veces mayor en un paciente con disnea. Sin embargo, el amplio IC hace cuestionable este valor. Dicho esto, sí puede afirmarse con confianza que el riesgo aumenta.
 
 De forma similar, hay un aumento estadisticamente significativo de que un paciente con dolor abdominal presente metástasis. Aunque el OR indica que este aumento es de más de 1700 veces, este valor vuelve a ser cuestionable teniendo en cuenta el IC.
 
 ## Conclusión
-A través del presente análisis génico de 65(?) pacientes junto con las expresiones de sus 46 genes respectivos se han obtenido las siguientes conclusiones:
 
-Para analizar la variabilidad de datos se realizó un PCA. El objetivo principal es reducir la complejidad de un conjunto de variables observadas e identificar los componentes principales que explican la mayor parte de la variabilidad en los datos originales, es decir, la varianza total es igual a la varianza común. Al realizarlo, se encontró que más del 70 % de esta se explicaba mediante las 5 primeras dimensiones. 
+A través del presente análisis génico de 64 pacientes junto con las expresiones de sus 46 genes respectivos se han obtenido las siguientes conclusiones:
 
-Por un lado, se analizó estas 5 dimensiones en base a nuestras variables, es decir, los genes (?). Se pudo observar que, el primer componente, relacionado con la inflamación sistémica y señalización celular, evidenció diferencias significativas en las expresiónes génicas en la mayor parte de los genes, lo que es relevante a la hora de clasificar los pacientes. Por otro lado, el resto de componentes mostraron, que explican aproximadamente un 19'50% de la variabilidad, aun asi muestran patrones diferenciados, especialmente el componente 5 que esta relacionado con la inflamación y la diferenciación Immune.
+Es posible analizar la varianza de datos de manera eficiente utilizando un PCA. El objetivo principal de este modelo es reducir la complejidad de un conjunto de variables observadas e identificar los componentes principales que explican la mayor parte de la varianza en los datos originales, es decir, la varianza total es igual a la varianza común. Al realizarlo, se encontró que más del 70% de esta se explicaba mediante las 5 primeras dimensiones. 
 
-Por otro lado, se analizó los pacientes en relación a estas 5 dimensiones:
-Se identificaron tres clústeres de pacientes con perfiles de expresión génica diferenciados:
-El primer clúster estaba asociado a una mayor expresión de genes relacionados con la regulación inmune y el estrés oxidativo.
-El segundo clúster, es un grupo intermedio con genes involucrados en la inflamación y regulación inmune.
-Por último, el tercer clúster presentaba una menor activación de procesos inflamatorios y de señalización celular.
+Por un lado, se analizaron estas 5 dimensiones en base a nuestras variables, es decir, las expresión génica. Se pudo observar que el primer componente, relacionado con la inflamación sistémica y señalización celular, evidenció diferencias significativas en las expresiónes génicas en la mayor parte de los genes, lo que es relevante a la hora de clasificar los pacientes. Por otro lado, el resto de componentes, que explican aproximadamente un 19.50% de la varianza, mostraron aun asi patrones diferenciados, especialmente el componente 5 que esta relacionado con la inflamación y la diferenciación Immune.
 
-Por último, se implemento una regresión logística para poder conocer la relación entre nuestos genes y la metastasis. 
+Por otro lado, se analizaron los pacientes en relación a estas 5 dimensiones. Se identificaron tres clústeres de pacientes con perfiles de expresión génica diferenciados:
+* El primer clúster está asociado a una mayor expresión de genes relacionados con la regulación inmune y el estrés oxidativo.
+* El segundo clúster, es un grupo intermedio con genes involucrados en la inflamación y regulación inmune.
+* Por último, el tercer clúster presentaba una menor activación de procesos inflamatorios y de señalización celular.
 
+Luego, al dividir a los pacientes por terciles según el score de los primeros 5 componentes, pudimos concluir que la expresión génica varía de forma estadísticamente significativa entre estos grupos de pacientes.
 
+Finalmente, al implementar una regresión logística para poder estimar el riesgo de que un paciente presente metástasis según diversas variables independientes, solo encontramos un número reducido de variables que presentaran un OR con significancia estadística (léase, dolor abdominal y disnea). Creemos que un tamaño muestral mayor sería útil para poder obtener resultados más significativos y encontrar una relación la metástasis y otras variables.
 
-
-
-
-
-
-
-
-
-
-
-
+Utilizando el lenguaje de programación R, hemos sido capaces de realizar un PCA, gráficos y tablas descriptivas, así como modelos predictivos de regresión logística, y extraer conclusiones pertinentes respecto a la expresión génica en pacientes con cáncer, así como su riesgo de presentar metástasis.
