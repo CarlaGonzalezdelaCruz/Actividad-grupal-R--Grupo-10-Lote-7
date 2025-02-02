@@ -149,7 +149,7 @@ grafico3d <- grafico3d %>% layout(title = "Distribución de Genes en PCA (3D)",
                                    zaxis = list(title = "Componente 3")))
 grafico3d
 ```
-La distribución de las variables en los tres primeros componentes principales muestra un grupo de genes que se agrupan en el centro del gráfico, indicando una similitud en su contribución a los componentes. No obstante, también se diferencian variables más alejadas como AQ_SLC2A4, que presentan un comportamiento diferente a su contribución a los componentes respecto a los demás genes. Al igual que en el gráfico anterior, el primer componente mantiene una contribución positiva para todas las variables. En cambio, el segundo y tercer componente muestran una mayor variabilidad y dispersión con asociaciones tanto positivas como negativas entre los genes.
+La distribución de las variables en los tres primeros componentes principales muestra un grupo de genes como AQ_JAK1, AQ_CCL5 y AQ_NFE2L2 que se agrupan en el centro del gráfico, indicando una similitud en su contribución a los componentes. No obstante, también se diferencian variables más alejadas como AQ_SLC2A4, AQ_ARG1 y AQ_FOXO3, que presentan un comportamiento diferente a su contribución a los componentes respecto a los demás genes. Al igual que en el gráfico anterior, el primer componente mantiene una contribución positiva para todas las variables. En cambio, el segundo y tercer componente muestran una mayor variabilidad y dispersión con asociaciones tanto positivas como negativas entre los genes.
 
 Variables con mayor contribución en las dimensiones. Se ha analizado tanto las dimensiones por separado como la combinación de estas con la dimensión 1, que es la que contribuye más (52'49%). 
 ```{r}
@@ -200,7 +200,10 @@ fviz_pca_ind(pca,
              addEllipses = TRUE,
              legend.title = "Cluster")
 ```
-En función de los dos primeros componentes principales que representan la inflamación sistemática y señalización celular, y la regulación inmune y estrés oxidativo, se han agrupado los pacientes en 3 clústers en base a sus perfiles de expresión génica. El análisis de K-means ha identificado las 3 arupaciones del gráfico, lo que sugiere que existen patrones comunes entre los pacientes de cada clúster.
+En función de los dos primeros componentes principales que representan la inflamación sistemática y señalización celular, y la regulación inmune y estrés oxidativo, se han agrupado los pacientes en 3 clústers en base a sus perfiles de expresión génica. El análisis de K-means ha identificado las 3 arupaciones del gráfico:
+Clúster 1 (verde, círculos): Representa pacientes con un perfil genético caracterizado por una mayor expresión de genes relacionados con la regulación inmune y el estrés oxidativo, esto queda reflejado por el desplazamiento que se oberva hacia valores positivos en la dimensión 1. Por otro lado, presenta una mayor dispersión lo que puede indicar una mayor heterogeneidad en sus perfiles de expresión génica.
+Clúster 2 (rojo, triángulos): Representa a un grupo intermedio de pacientes que combina genes relacionados con la inflamación y la regulación inmune. Los individuos de este grupo se superponen en parte con los otros clústeres, indicando una posible transición entre los perfiles genéticos.
+Clúster 3 (azul, cuadrados): Representa pacientes con menor activación de procesos inflamatorios y de señalización celular, localizados en la zona negativa de la dimensión 1 y más concentrados en el gráfico en comparación con los dos clústeres anteriores.
 
 ## Expresión génica en función de las cargas de los pacientes
 
