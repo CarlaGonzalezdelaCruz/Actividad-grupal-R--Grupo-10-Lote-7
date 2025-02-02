@@ -564,7 +564,7 @@ gt_componentes
 
 Para cada componente observamos cual es la disminución (OR<1) o el aumento (OR>1) del riesgo de presentar metastasis según si el paciente pertenece al tercil 2 o 3, comparado con el 1. Sin embargo, este riesgo no es estadisticamente significativo. Esto se concluye tanto a partir de los valores p mayores o iguales a 0.05, como el hecho de que los intervalos de confianza (excepto el último) contienen al valor 1 de riesgo nulo.
 
-Sin embargo, dentro del componente 5 (Inflamación y Diferenciación Inmune) podemos afirmar que hay una clara tedencia para los pacientes dentro del tercil 3 a tener menos riesgo de presentar metástasis.
+Sin embargo, dentro del componente 5 (Inflamación y Diferenciación Inmune) podemos afirmar que hay una clara tendencia para los pacientes dentro del tercil 3 a tener menos riesgo de presentar metástasis.
 
 Los hayazgos del modelo de regresión logística para los componentes se encuentran resumidos en el siguiete gráfico:
 
