@@ -645,6 +645,7 @@ El primer clúster estaba asociado a una mayor expresión de genes relacionados 
 El segundo clúster, es un grupo intermedio con genes involucrados en la inflamación y regulación inmune.
 Por último, el tercer clúster presentaba una menor activación de procesos inflamatorios y de señalización celular.
 
+Por último, se implemento una regresión logística para poder conocer la relación entre nuestos genes y la metastasis. 
 
 
 
