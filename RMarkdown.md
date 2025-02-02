@@ -1,6 +1,6 @@
 ---
 title: "Resolución Actividad 3 máster Bioinformática UNIR"
-author: "Valeria Pesa"
+author: "Ana Amador Fajardo, Carla González de la Cruz, Judit Puntí Currius y Valeria Pesa"
 date: "2025-01-27"
 output: html_document
 ---
