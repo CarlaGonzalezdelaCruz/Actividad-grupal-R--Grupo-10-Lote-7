@@ -441,7 +441,7 @@ resumen_CP4 <- expgenica_CP4 %>%
 
 resumen_CP4
 ```
-Como se observa, la mayoría de los genes presentan un valor de p-value <0.05 aceptando la hipótesis alternativa, indicando la presencia de diferencias significativas entre los terciles de expresión génica. Sin embargo, en los componentes 2 y 3, donde la varianza explicada es menor, se observa una reducción en el número de genes con diferencias significativas.
+Como se observa, la mayoría de los genes presentan un valor de p-value <0.05 aceptando la hipótesis alternativa, indicando la presencia de diferencias significativas entre los terciles de expresión génica.
 
 ```{r}
 expgenica_CP5 <- select(expgenica_terciles, starts_with("AQ_"), Componente_5)
@@ -483,7 +483,7 @@ resumen_CP5 <- expgenica_CP5 %>%
 
 resumen_CP5
 ```
-#### analisis tabla resumen_CP5
+En los terciles basados en el componente 5 (Inflamación y Diferenciación Inmune), a pesar de que este componente explica solo el 3.82% de la varianza total, la mayoría de genes presentan diferencias estadísticamente significativas. No obstante, cinco genes (AQ_ADIPOQ, AQ_IL10, AQ_LIF, AQ_NOX5 y AQ_TLR3) no muestran diferencias significativas, indicando que su expresión no varía de forma relevante en función de los terciles.
 
 
 Finalmente, el siguiente código reúne las 5 tablas en una única tabla que resume los estadísticos obtenidos:
@@ -502,6 +502,7 @@ tabla_combinada <- tbl_merge(
 
 tabla_combinada
 ```
+### Resumen de las tablas de los 5 componentes
 
 ## Implementar un modelo de regresión logística
 
