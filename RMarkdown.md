@@ -159,7 +159,11 @@ fviz_contrib(pca, choice = "var", axes = 3, top = 50)
 fviz_contrib(pca, choice = "var", axes = 4, top = 50)
 fviz_contrib(pca, choice = "var", axes = 5, top = 50)
 ```
-#
+En el análisis de la Dimensión 1, los genes más influyentes incluyen AQ_JAK1, AQ_CCL5, AQ_SREBF1 y AQ_NFE2L2.   
+En la Dimensión 2, las contribuciones están más dispersas, destacándose genes como AQ_ARG1, AQ_CCL1 y AQ_LIF, los cuales presentan valores superiores en comparación con los demás genes.  
+En la Dimensión 3, se identifican algunas variables con contribuciones elevadas como  son AQ_SLC2A4 y AQ_JAK3.  
+Por otro lado, la Dimensión 4 tienen una gran contribución AQ_NOX5, AQ_ADIPOQ y AQ_NOS2, superando el 30%.  
+Finalmente, en la Dimensión 5, los genes con mayor contribución son AQ_IL6, AQ_CSF1, AQ_NOS2, AQ_BMP2 y AQ_SLC2A4.
 
 ```{r}
 fviz_contrib(pca, choice = "var", axes = c(1, 2), top = 50)
@@ -167,8 +171,10 @@ fviz_contrib(pca, choice = "var", axes = c(1, 3), top = 50)
 fviz_contrib(pca, choice = "var", axes = c(1, 4), top = 50)
 fviz_contrib(pca, choice = "var", axes = c(1, 5), top = 50)
 ```
-#
-
+En la combinación de las Dimensiones 1 y 2, se observa una distribución más uniforme de las contribuciones, con valores más equilibrados en comparación con las gráficas por individual. Entre los genes con mayores contribuciones se encuentran AQ_JAK1, AQ_PTAR, AQ_SREBF1 y AQ_NFE2L2.  
+Al considerar las Dimensiones 1 y 3, se evidencia que algunos genes que eran dominantes en la Dimensión 3, como AQ_SLC2A4, AQ_JAK3 y AQ_FOXO3, ya no presentan un aporte tan marcado. En contraste, genes como AQ_JAK1, AQ_IL5 y AQ_TGFBI adquieren mayor importancia en esta gráfica.   
+En la combinación de las Dimensiones 1 y 4, la contribución se encuentra más dispersa y distribuida entre varios genes, con AQ_JAK1, AQ_CCL5, AQ_SREBF1 y AQ_NFE2L2 mostrando valores similares, en torno al 3%.  
+Finalmente, en la combinación con la Dimensión 5, los genes con mayor contribución son AQ_JAK1, AQ_CCL5, AQ_SREBF1, AQ_NFE2L2 y AQ_PTARF.
 
 Teniendo en cuenta los valores de los scores y la contribución de cada gen a cada dimensión, así como la función de dichos genes, decidimos nombrar a los componentes de la siguiente manera:
 
