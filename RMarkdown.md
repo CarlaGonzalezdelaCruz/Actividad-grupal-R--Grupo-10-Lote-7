@@ -441,7 +441,7 @@ resumen_CP4 <- expgenica_CP4 %>%
 
 resumen_CP4
 ```
-#### analisis tabla resumen_CP4
+Como se observa, la mayoría de los genes presentan un valor de p-value <0.05 aceptando la hipótesis alternativa, indicando la presencia de diferencias significativas entre los terciles de expresión génica. Sin embargo, en los componentes 2 y 3, donde la varianza explicada es menor, se observa una reducción en el número de genes con diferencias significativas.
 
 ```{r}
 expgenica_CP5 <- select(expgenica_terciles, starts_with("AQ_"), Componente_5)
