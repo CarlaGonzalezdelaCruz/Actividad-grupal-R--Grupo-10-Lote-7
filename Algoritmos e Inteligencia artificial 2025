@@ -1,0 +1,395 @@
+ACTIVIDAD 3_CARLA GONZÁLEZ DE LA CRUZ
+▸	Preparación el entorno de trabajo (instalación y carga de paquetes adecuados).
+▸	Depurado del conjunto de datos: 
+•	Generar un solo dataframe cuyas columnas se correspondan con el nombre del gen, el nombre de las filas con el ID (identification) de cada muestra y donde se incluya la columna con la clase de cada muestra.
+•	Imputación de los datos NA. 
+•	Otros métodos de procesamiento de las muestras escogidos por el estudiante después explorar los datos.
+▸	Implementación de cuatro métodos de aprendizaje no supervisado: dos de reducción de dimensionalidad y dos de clusterización. 
+Reduccion de dimensionalidad: PCA y Multidimensional scaling
+Clusterización: jerarquica (knn con resultados de PCA y función fviz_cluster) y un no jerarquico: Single, Complete, Averaga y Ward y también DIANA.
+▸	Implementación de tres métodos de aprendizaje supervisado + cálculo de diferentes métricas de evaluación: matriz de confusión, precisión, sensibilidad, especificidad y score-F1. 
+Knn
+Arbol de decisión (No sale)
+SVM
+Naive Bayes (No sale)
+Random Forest
+¿Cálculo de F1: FALTA?
+▸	Preguntas de respuesta corta.
+..............................................
+SCRIPT de R
+
+rm(list=ls())
+#establecer directorio de trabajo e importar bases de datos
+setwd("C:/Users/Usuario/Documents/Master en Bioinformática/AÑO 2 (2025-2026)/Algoritmos e Inteligencia Artificial/Actividad 3")
+library(readr)
+library(readxl)
+clases <- read_excel("classes.xlsx")
+nombres_genes <- read.csv("nombres.csv", header = FALSE)
+datos_expresion<- read_excel("gene_expresion.xlsx")
+View(gene_expresion)
+#Hacer un unico dataframe 
+#crear un vector con los nombres
+nombres_genes <- nombres_genes[[1]] #extraigo los nombres de los genes
+ncol(datos_expresion) #veo que coinciden las dimensiones
+length(nombres_genes)
+colnames(datos_expresion) <- nombres_genes #le añado los nombres a las columnas de los datos de expresion
+#unir bbdd de expresion y de clases con la funcion cbind
+data_final <- cbind(clases, datos_expresion)
+View(data_final)
+#ver si hay NA 
+anyNA(data_final)
+
+#veo que genes se expresan mas por un heatmap
+library(pheatmap)
+#quitar las dos primeras columnas que no son numericas
+data_final_heatmap <- as.matrix(data_final[, -c(1,2)])
+pheatmap(
+  data_final_heatmap,
+  show_rownames = TRUE,
+  show_colnames = TRUE,
+  clustering_distance_rows = "euclidean",
+  clustering_distance_cols = "euclidean",
+  clustering_method = "complete"
+)
+
+#como al ser tantos genes no se visualiza bien, voy a quedarme con los 100 genes que mas varianza tenga
+varianza <- apply(data_final, 2, var, na.rm = TRUE)
+top_genes <- names(sort(varianza, decreasing = TRUE))[1:100]
+matriz_genes <- data_final_heatmap[, top_genes]
+View(matriz_genes)
+#hago el heatmap con estos 100 genes
+heatmap100 <- pheatmap(
+  matriz_genes,
+  show_rownames = TRUE,
+  show_colnames = TRUE,
+  clustering_distance_rows = "euclidean",
+  clustering_distance_cols = "euclidean",
+  clustering_method = "complete"
+)
+#reduzco a 50 genes
+top_genes50 <- names(sort(varianza, decreasing = TRUE))[1:50]
+matriz_genes50 <- data_final_heatmap[, top_genes50]
+View(matriz_genes50)
+#hago el heatmap con estos 50 genes
+heatmap50 <- pheatmap(
+  matriz_genes,
+  show_rownames = TRUE,
+  show_colnames = TRUE,
+  clustering_distance_rows = "euclidean",
+  clustering_distance_cols = "euclidean",
+  clustering_method = "complete"
+)
+
+
+############IMPLEMENTACION DE 4 MÉTODOS DE APRENDIZAJE NO SUPERVISADO; DOS DE REDUCCION DE LA DIMENSIONALIDAD Y DOS DE CLUSTERIZACION 
+#EMPEZAMOS POR LA REDUCCION DE LA DIMENSIONALIDAD. VAMOS A APLICAR UN PCA Y UN MULTIDIMENSIONAL SCALING
+#PCA
+library(stats)
+library(ggplot2)
+pca_resultados <- prcomp(data_final_heatmap, center = TRUE, scale. = FALSE) #hago con data_final_heatmap, en vez de data_final porque es la que contiene solamente datos numéricos
+#para los calculos de los componentes principales
+pca_dataframe <- data.frame(pca_resultados$x)
+varianzas_pca <- pca_resultados$sdev^2 #calculo de las varianzas
+total_varianzas_pca <- sum(varianzas_pca) #total varianza de los datos
+varianza_explicada <- varianzas_pca/total_varianzas_pca #varianza de cada componente principal 
+varianza_acumulada <- cumsum(varianza_explicada) #calculo de la varianza acumulada
+num_componentespca <- min(which(varianza_acumulada > 0.90)) #ver el numero de componentes principales que me calculan el 90% de la varianza de los datos 
+#graficamos
+x_label <- paste0(paste('PC1', round(varianza_explicada[1]*100,2)), '%')
+y_label <- paste0(paste('PC2', round(varianza_explicada[2]*100,2)), '%')
+#para ver los datos por clase, tengo que añadir esta variable al data.frame de PCA:
+pca_dataframe$Class <- data_final[, 2]
+
+pca_grafica <- ggplot(pca_dataframe, aes(x = PC1, y = PC2, color = Class)) +
+  geom_point(size = 3) +
+  labs(title = 'PCA - Types of Cancer', x = x_label, y = y_label, color = 'Grupo') +
+  theme_classic() +
+  theme(
+    panel.grid.major = element_line(color = "gray90"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_rect(fill = "gray95"),
+    plot.title = element_text(hjust = 0.5)
+  )
+pca_grafica
+
+#MULTIDIMENSIONAL SCALING
+#calcular la matriz de distancia del conjnto de datos con el metodo euclideo
+distancias_euclidea <- dist(data_final_heatmap, method = 'euclidean')
+msd_resultados_euclidean <- cmdscale(distancias_euclidea, eig =  TRUE, k= 2, x.ret = TRUE)
+View(msd_resultados_euclidean)
+#sacamos en un data frame los puntos obtenidos
+msd_dataframe_euclidean <- data.frame(msd_resultados_euclidean$points)
+#para ver los datos por clase, tengo que añadir esta variable al data.frame de MSD
+msd_dataframe_euclidean$Class <- data_final[, 2]
+#graficamos este dataframe
+mds_grafica <- ggplot(msd_dataframe_euclidean, aes(x=X1, y=X2, color = Class)) +
+  geom_point(size=3) + 
+  labs(title="Tipos of Cancer (MDS Euclídea)", x="Dimension 1 (X1)", y="Dimension 2 (X2)", color = "Grupo") +
+  theme_classic() + 
+  theme(panel.grid.major = element_line(color = "gray90"), panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "gray95"), plot.title=element_text(hjust=0.5))
+mds_grafica
+
+
+
+#si queremos representar en 3D
+msd_resultados3D <- cmdscale(distancias_euclidea, k= 3)
+msd_df_3D <- data.frame(msd_resultados3D)
+msd_df_3D$Class <- data_final[, 2]
+colnames(msd_df_3D) <- c("Dim1", "Dim2", "Dim3", "Class")
+library(plotly)
+msd_grafica_3D <- plot_ly(msd_df_3D, x = ~Dim1, y = ~Dim2, z = ~Dim3, 
+                          color = ~Class, colors = "Set1", 
+                          marker = list(size = 4))
+msd_grafica_3D
+
+
+#PROBAMOS CON OTRO TIPO DE DISTANCIAS? MANHATTAN??
+
+
+
+#TECNICAS NO SUEPRVISADAS DE CLUSTERIZACION. VAMOS A HACER UNA JERÁRQUICA Y OTRA NO JERÁRQUICA
+library(cluster)
+set.seed(1995)
+km_resultados <- kmeans(data_final_heatmap, centers = 5, iter.max = 100, nstart = 25)
+#visualizo
+library(factoextra)
+#para meter los datos generados del pca, tego que eliminar las columnas sample y class que añadí antes
+pca_numerico <- pca_dataframe[, sapply(pca_dataframe, is.numeric)]
+fviz_cluster(km_resultados, data = pca_numerico, xlab = '', ylab = '') +
+  ggtitle("Clusterizacion no jerarquica con 5 kmeans") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, margin = margin(b = -10)))
+#como era de estperar, con 800 muestras y 5km no me da nada representativo. 
+
+#CLUSTERIZACION JERARQUICA
+#Vamos a aplicar los diferentes métodos de agrupamiento: Single, Complete, Average y ward.DZ
+#calculamos la matriz de distancias
+distancia_matriz <- dist(data_numerica)
+distancia_matriz
+hclust_single <- hclust(distancia_matriz, method = "single")
+hclust_complete <- hclust(distancia_matriz, method = "complete")
+hclust_average <- hclust(distancia_matriz, method = "average")
+hclust_ward <- hclust(distancia_matriz, method = "ward.D2")
+#calculamos la variable de indices para el orden en el dendograma
+hclust_single$order
+hclust_complete$order
+hclust_average$order
+hclust_ward$order
+#graficamos resultados
+plot(hclust_single, main = "Single Linkage")
+plot(hclust_complete, main = "Complete Linkage")
+plot(hclust_average, main = "Average Linkage")
+plot(hclust_ward, main = "Ward Linkage")
+
+#Como 800 genes no nos da resultado de nada, vamos a hacer las mismas técnicas con los 50 genes selecionados con mas varianza
+#reduzco a 50 genes(lo he hecho anteriormente, por lo que la base de datos que vamos a utilziar a continuacion es la matriz_genes )
+top_genes50 <- names(sort(varianza, decreasing = TRUE))[1:50]
+matriz_genes50 <- data_final_heatmap[, top_genes50]
+View(matriz_genes50)
+distancia_matriz50 <- dist(matriz_genes50)
+distancia_matriz50
+hclust_single50 <- hclust(distancia_matriz50, method = "single")
+hclust_complete50 <- hclust(distancia_matriz50, method = "complete")
+hclust_average50 <- hclust(distancia_matriz50, method = "average")
+hclust_ward50 <- hclust(distancia_matriz50, method = "ward.D2")
+#calculamos la variable de indices para el orden en el dendograma
+hclust_single50$order
+hclust_complete50$order
+hclust_average50$order
+hclust_ward50$order
+#graficamos resultados
+plot(hclust_single50, main = "Single Linkage")
+plot(hclust_complete50, main = "Complete Linkage")
+plot(hclust_average50, main = "Average Linkage")
+plot(hclust_ward50, main = "Ward Linkage")
+#REALIZAMOS POR COLORES Y LA FUNCION FVIZ_DEND
+colores <- rainbow(10)
+clust_single <- fviz_dend(hclust_single50, 
+                          cex = 0.5, 
+                          k = 10, 
+                          palette = colores, 
+                          main = "Single Linkage Dendogram", 
+                          xlab = "Índice de Observaciones", 
+                          ylab = "Distancia") + theme_classic()
+clust_single
+
+clust_complete <- fviz_dend(hclust_complete50, 
+                          cex = 0.5, 
+                          k = 10, 
+                          palette = colores, 
+                          main = "Complete Linkage Dendogram", 
+                          xlab = "Índice de Observaciones", 
+                          ylab = "Distancia") + theme_classic()
+clust_complete
+
+clust_average <- fviz_dend(hclust_average50, 
+                          cex = 0.5, 
+                          k = 10, 
+                          palette = colores, 
+                          main = "Average Linkage Dendogram", 
+                          xlab = "Índice de Observaciones", 
+                          ylab = "Distancia") + theme_classic()
+clust_average
+
+clust_ward <- fviz_dend(hclust_ward50, 
+                          cex = 0.5, 
+                          k = 10, 
+                          palette = colores, 
+                          main = "Ward Linkage Dendogram", 
+                          xlab = "Índice de Observaciones", 
+                          ylab = "Distancia") + theme_classic()
+clust_ward
+library(gridExtra)
+dendogramas_todos <- grid.arrange(clust_single, clust_complete, clust_average, clust_ward, nrow = 2)
+dendogramas_todos
+
+#CLUSTERIZACION JERARQUICA DECISIVA- DIANA: divise Analysis Clustering
+library(cluster)
+diana_euclidean <- diana(data_numerica, metric = "euclidean", stand = F)
+clust_diana_euclidean <- fviz_dend(diana_euclidean, 
+                                  cex = 0.5, 
+                                  k = 10, 
+                                  palette = colores, 
+                                  main = "DIANA Euclidean", 
+                                  xlab = "Indice de observaciones", 
+                                  ylab = "Distancia") + theme_classic()
+clust_diana_euclidean
+
+####################TECNICAS DE APRENDIZAJE SUPERVISADO############################
+#primero procedemos a la division del co njunto de datos en training y test
+#dividir el conjunto de datos en train/test
+#primero establecemos una semilla 
+set.seed(1995)
+#le pongo el nombre de Class a la segunda columna del data_final, que no la tiene
+colnames(data_final)[2] <- "Class"
+colnames(data_final)[1] <- "Sample" #aunque esta colmna voy a eliminarla porque sino el algoritmo la va a querer convertir a numerica
+data_numerica <- subset(data_final, select = -Sample)
+library(caret)
+trainIndex <- createDataPartition(data_numerica$Class, p = 0.8, list = FALSE)
+data_final$Class <- as.factor(data_numerica$Class)
+trainData <- data_numerica[trainIndex,]
+testData <- data_numerica[-trainIndex,]
+#knn
+#Class es una variable factor, por lo tanto vamos a utilizar modelos de clasificacion
+knnModel <- train(Class ~ .,
+                  data = trainData,
+                  method = "knn",
+                  trControl = trainControl(method = "cv", number = 10),
+                  preProcess = c("center", "scale"),
+                  tuneLength = 11)
+
+knnModel
+
+plot(knnModel) 
+#veo que knn=17 tiene mayor accusary, por lo tanto hago el modelo con k 17 
+#veo que knn=15 tiene mayor accusary, por lo tanto hago el modelo con k 15 
+#veo que knn=11 tiene mayor accusary, por lo tanto hago el modelo con k 11 
+#vemos el valor de accuracy y kappa para ver el ajuste del modelo
+
+# Realizar predicciones en el conjunto de prueba utilizando el modelo entrenado con knn=11
+predictions <- predict(knnModel, newdata = testData )
+predictions
+
+# Evaluar la precisión del modelo utilizando la matriz de confusión
+confusionMatrix(predictions, testData$Class)
+
+#arbol de decision- NO ME FUNCIONA NO SE PORQUE 
+dtModel <- train(Class ~.,
+                 data = trainData,
+                 method = "rpart",
+                 trControl = trainControl(method = "cv", number = 10),
+                 preProcess = c("center", "scale"),
+                 tuneLength = 10)
+ndtModel
+plot(dtModel)
+fancyRpartPlot(dtModel$finalModel, type=4)
+
+
+
+# Evaluar el modelo con el conjunto de prueba
+predictions_raw <- predict(dtModel, newdata = testData, type = "raw") # raw = clases
+predictions_raw
+
+# Obtener probabilidades
+probabilities_dt <- predict(dtModel, newdata = testData, type = "prob")
+probabilities_dt
+
+#SVM
+library(kernlab)
+svmModelLineal <- train(Class ~.,
+                        data = trainData,
+                        method = "svmLinear",
+                        trControl = trainControl(method = "cv", number = 10),
+                        preProcess = c("center", "scale"),
+                        tuneGrid = expand.grid(C = seq(0, 2, length = 20)), #C grande lleva al sobreajuste, C pequeño al infraajuste
+                        prob.model = TRUE) 
+svmModelLineal
+#poner valores mas pequeños de C, ya que en la primera prueba del modelo, salia que el optimo eta 0.315
+svm_grid <- expand.grid(C = c(0.001, 0.01, 0.05, 0.1, 0.2, 0.3))
+svmModelLineal <- train(Class ~.,
+                        data = trainData,
+                        method = "svmLinear",
+                        trControl = trainControl(method = "cv", number = 10),
+                        preProcess = c("center", "scale"),
+                        tuneGrid = svm_grid, #C grande lleva al sobreajuste, C pequeño al infraajuste
+                        prob.model = TRUE) 
+svmModelLineal
+plot(svmModelLineal)
+
+# Realizar predicciones en el conjunto de prueba utilizando el modelo entrenado
+predictions <- predict(svmModelLineal, newdata = testData )
+predictions
+
+# Evaluar la precisión del modelo utilizando la matriz de confusión
+confusionMatrix(predictions, testData$Class)
+
+
+# Evaluar la precisión del modelo utilizando la matriz de confusión
+confusionMatrix(predictions, testData$Class)
+
+
+#Naive Bayes #NO SALEEEEEEEEEEEE
+library(klaR)
+nb_model <- train(
+  Class ~ .,
+  data = trainData,
+  method = "nb",
+  trControl = trainControl(method = "cv", number = 10)
+)
+nbmodel
+### Predicción de clases (Primary / Metastatic)
+predictions <- predict(
+  nb_model,
+  newdata = testData
+)
+predictions
+
+### Evaluación mediante matriz de confusión
+confusionMatrix(
+  predictions,
+  testData$primaryormetastasis
+)
+
+############RANDOM FOREST##################################
+library(randomForest)
+rf_model <- train(
+  Class ~ .,
+  data = trainData,
+  method = "rf",
+  trControl = trainControl(method = "cv", number = 10),
+  preProcess = c("center", "scale"),  # no imprescindible, pero se mantiene coherencia
+  tuneLength = 10,
+  importance = TRUE
+)
+rf_model
+plot(rf_model)
+
+#Predicciones
+predictions <- predict(rf_model,newdata = testData)
+predictions
+#Matriz de confusión
+confusionMatrix(predictions,testData$Class)
+### Probabilidades de clase
+probabilities_rf <- predict(rf_model,newdata = testData,type = "prob")
+probabilities_rf
